@@ -1,0 +1,41 @@
+import { useEffect, useState } from 'react';
+import { api } from '../api.js';
+import { formatPrice } from '../cart.js';
+
+export default function Orders() {
+  const [orders, setOrders] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.orders().then(setOrders).catch((err) => setError(err.message));
+  }, []);
+
+  if (error) return <p className="error">{error}</p>;
+  if (!orders) return <p className="muted">Loading…</p>;
+
+  return (
+    <section>
+      <h1>My orders</h1>
+      {orders.length === 0 ? (
+        <p className="muted">You have no orders yet.</p>
+      ) : (
+        <table className="card table">
+          <thead>
+            <tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.id}>
+                <td>#{order.id}</td>
+                <td>{new Date(order.createdAt).toLocaleString()}</td>
+                <td>{order.items.map((item) => `${item.quantity} × ${item.name}`).join(', ')}</td>
+                <td>{formatPrice(order.total)}</td>
+                <td><span className="badge">{order.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
