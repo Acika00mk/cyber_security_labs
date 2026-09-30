@@ -33,35 +33,57 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  // Only take WHAT the user wants. Ignore total, discount, and prices.
+  const { items, couponCode } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' });
   }
 
+  // Coupon: must be a string and must exist in the database
   let coupon = null;
-  if (couponCode) {
+  if (couponCode !== undefined && couponCode !== null && couponCode !== '') {
+    if (typeof couponCode !== 'string') {
+      return res.status(400).json({ error: 'Invalid coupon' });
+    }
     coupon = findCoupon(couponCode);
     if (!coupon) {
       return res.status(400).json({ error: 'Invalid coupon' });
     }
   }
 
+  // Items: price from the database, quantity validated
   const lines = [];
+  let subtotalCents = 0;
   for (const item of items) {
     const product = findProduct(item.productId);
     if (!product) {
       return res.status(400).json({ error: 'Unknown product' });
     }
-    lines.push({
-      productId: product.id,
-      quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
-    });
+
+    const quantity = Number(item.quantity ?? 1);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+      return res.status(400).json({ error: 'Invalid quantity' });
+    }
+
+    const unitPriceCents = product.price_cents;
+    subtotalCents += unitPriceCents * quantity;
+    lines.push({ productId: product.id, quantity, unitPriceCents });
   }
 
-  // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
-  const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
+  // Discount: calculated by the server from the coupon in the database
+  let discountCents = 0;
+  if (coupon) {
+    if (coupon.percent_off != null) {
+      discountCents = Math.round((subtotalCents * coupon.percent_off) / 100);
+    } else if (coupon.amount_off_cents != null) {
+      discountCents = coupon.amount_off_cents;
+    }
+  }
+
+  discountCents = Math.max(0, Math.min(discountCents, subtotalCents));
+
+  const totalCents = subtotalCents - discountCents;
+
   const orderId = transaction(() => {
     const order = db
       .prepare(
@@ -85,7 +107,12 @@ router.post('/', requireLogin, (req, res) => {
     return order.lastInsertRowid;
   });
 
-  res.status(201).json({ orderId, total: totalCents / 100, discount: discountCents / 100, status: 'paid' });
+  res.status(201).json({
+    orderId,
+    total: totalCents / 100,
+    discount: discountCents / 100,
+    status: 'paid',
+  });
 });
 
 module.exports = router;
