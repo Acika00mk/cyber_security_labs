@@ -69,12 +69,9 @@ export function buildOrder(cart, couponCode) {
   return {
     items: cart.map((line) => ({
       productId: line.productId,
-      quantity: line.quantity,
-      unitPrice: line.price,
+      quantity: line.quantity
     })),
-    total: orderTotal(cart, code),
-    couponCode: code || undefined,
-    discount: couponDiscount(code),
+    couponCode: code || undefined
   };
 }
 

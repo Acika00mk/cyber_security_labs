@@ -33,7 +33,7 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  const { items, couponCode } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' });
   }
@@ -46,22 +46,42 @@ router.post('/', requireLogin, (req, res) => {
     }
   }
 
-  const lines = [];
-  for (const item of items) {
-    const product = findProduct(item.productId);
-    if (!product) {
-      return res.status(400).json({ error: 'Unknown product' });
-    }
-    lines.push({
-      productId: product.id,
-      quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
-    });
+ const lines = [];
+let calculatedTotalCents = 0;
+
+for (const item of items) {
+  const quantity = Number(item.quantity);
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    return res.status(400).json({ error: 'Invalid quantity. Must be a positive integer.' });
   }
 
+  const product = findProduct(item.productId);
+  if (!product) {
+    return res.status(400).json({ error: 'Unknown product' });
+  }
+
+  const unitPriceCents = product.price_cents ?? Math.round((Number(product.price) || 0) * 100);
+
+  lines.push({
+    productId: product.id,
+    quantity: quantity,
+    unitPriceCents: unitPriceCents,
+  });
+
+  calculatedTotalCents += unitPriceCents * quantity;
+}
+
   // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
-  const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
+  
+let discountCents = 0;
+  if (coupon) {
+    discountCents = coupon.discount_cents ?? Math.round((Number(coupon.discount) || 0) * 100);
+    if (discountCents > calculatedTotalCents) {
+      discountCents = calculatedTotalCents;
+    }
+  }
+
+  const finalTotalCents = calculatedTotalCents - discountCents;
   const orderId = transaction(() => {
     const order = db
       .prepare(
@@ -70,7 +90,7 @@ router.post('/', requireLogin, (req, res) => {
       )
       .run(
         req.session.userId,
-        totalCents,
+        finalTotalCents,
         'paid',
         new Date().toISOString(),
         coupon ? coupon.code : null,
@@ -85,7 +105,7 @@ router.post('/', requireLogin, (req, res) => {
     return order.lastInsertRowid;
   });
 
-  res.status(201).json({ orderId, total: totalCents / 100, discount: discountCents / 100, status: 'paid' });
+  res.status(201).json({ orderId, total: finalTotalCents / 100, discount: discountCents / 100, status: 'paid' });
 });
 
 module.exports = router;
