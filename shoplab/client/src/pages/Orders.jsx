@@ -21,7 +21,7 @@ export default function Orders() {
       ) : (
         <table className="card table">
           <thead>
-            <tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr>
+            <tr><th>Order</th><th>Date</th><th>Items</th><th>Discount</th><th>Total</th><th>Status</th></tr>
           </thead>
           <tbody>
             {orders.map((order) => (
@@ -29,6 +29,7 @@ export default function Orders() {
                 <td>#{order.id}</td>
                 <td>{new Date(order.createdAt).toLocaleString()}</td>
                 <td>{order.items.map((item) => `${item.quantity} × ${item.name}`).join(', ')}</td>
+                <td>{order.couponCode ? `-${formatPrice(order.discount)} (${order.couponCode})` : '–'}</td>
                 <td>{formatPrice(order.total)}</td>
                 <td><span className="badge">{order.status}</span></td>
               </tr>

@@ -1,6 +1,12 @@
 const STORAGE_KEY = 'shoplab.cart';
 export const MAX_QUANTITY = 10;
 
+// Fixed amount in euros taken off the order total.
+export const COUPONS = {
+  WELCOME10: 10,
+  SPRING50: 50,
+};
+
 export function loadCart() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -46,14 +52,29 @@ export function cartCount(cart) {
   return cart.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
 }
 
-export function buildOrder(cart) {
+export function normalizeCoupon(code) {
+  return String(code || '').trim().toUpperCase();
+}
+
+export function couponDiscount(code) {
+  return COUPONS[normalizeCoupon(code)] || 0;
+}
+
+export function orderTotal(cart, couponCode) {
+  return Math.max(0, Math.round((cartTotal(cart) - couponDiscount(couponCode)) * 100) / 100);
+}
+
+export function buildOrder(cart, couponCode) {
+  const code = normalizeCoupon(couponCode);
   return {
     items: cart.map((line) => ({
       productId: line.productId,
       quantity: line.quantity,
       unitPrice: line.price,
     })),
-    total: cartTotal(cart),
+    total: orderTotal(cart, code),
+    couponCode: code || undefined,
+    discount: couponDiscount(code),
   };
 }
 

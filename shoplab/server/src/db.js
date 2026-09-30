@@ -27,7 +27,9 @@ db.exec(`
     user_id INTEGER,
     total_cents INTEGER,
     status TEXT,
-    created_at TEXT
+    created_at TEXT,
+    coupon_code TEXT,
+    discount_cents INTEGER DEFAULT 0
   );
   CREATE TABLE IF NOT EXISTS order_items (
     id INTEGER PRIMARY KEY,
@@ -36,7 +38,20 @@ db.exec(`
     quantity INTEGER,
     unit_price_cents INTEGER
   );
+  CREATE TABLE IF NOT EXISTS coupons (
+    id INTEGER PRIMARY KEY,
+    code TEXT UNIQUE,
+    discount_cents INTEGER,
+    active INTEGER
+  );
 `);
+
+// Databases created before coupons existed are missing these columns.
+const orderColumns = db.prepare('PRAGMA table_info(orders)').all().map((column) => column.name);
+if (!orderColumns.includes('coupon_code')) db.exec('ALTER TABLE orders ADD COLUMN coupon_code TEXT');
+if (!orderColumns.includes('discount_cents')) {
+  db.exec('ALTER TABLE orders ADD COLUMN discount_cents INTEGER DEFAULT 0');
+}
 
 function seed() {
   const users = [
@@ -67,6 +82,12 @@ if (db.prepare('SELECT COUNT(*) AS n FROM users').get().n === 0) {
   seed();
 }
 
+if (db.prepare('SELECT COUNT(*) AS n FROM coupons').get().n === 0) {
+  const insertCoupon = db.prepare('INSERT INTO coupons (code, discount_cents, active) VALUES (?, ?, 1)');
+  insertCoupon.run('WELCOME10', 1000);
+  insertCoupon.run('SPRING50', 5000);
+}
+
 function transaction(fn) {
   db.exec('BEGIN');
   try {
@@ -83,4 +104,10 @@ function findProduct(id) {
   return db.prepare('SELECT * FROM products WHERE id = ?').get(Number(id) || 0);
 }
 
-module.exports = { db, transaction, findProduct };
+function findCoupon(code) {
+  return db
+    .prepare('SELECT * FROM coupons WHERE code = ? AND active = 1')
+    .get(String(code).trim().toUpperCase());
+}
+
+module.exports = { db, transaction, findProduct, findCoupon };

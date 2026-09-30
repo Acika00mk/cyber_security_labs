@@ -66,6 +66,9 @@ input[type='number'] { width: 5rem; }
 .table th, .table td { text-align: left; padding: 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
 .checkout { text-align: right; margin-top: 1rem; }
 .total { font-size: 1.2rem; font-weight: 600; }
+.coupon { display: inline-flex; align-items: center; gap: 0.6rem; }
+.coupon input { width: 10rem; text-transform: uppercase; }
+.checkout p { margin: 0.4rem 0; }
 
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }

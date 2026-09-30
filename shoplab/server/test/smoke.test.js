@@ -44,3 +44,10 @@ test('an order without price fields does not crash the server', async () => {
   const res = await agent.post('/api/orders').send({ items: [{ productId: 3, quantity: 1 }] });
   assert.ok(res.status < 500, `unexpected status ${res.status}`);
 });
+
+test('an order with a coupon code does not crash the server', async () => {
+  const res = await agent
+    .post('/api/orders')
+    .send({ items: [{ productId: 3, quantity: 1 }], couponCode: 'WELCOME10' });
+  assert.ok(res.status < 500, `unexpected status ${res.status}`);
+});

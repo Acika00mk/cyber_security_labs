@@ -27,6 +27,8 @@ Open **http://localhost:3000** and log in with one of the lab accounts:
 | alice@shoplab.test | alice123 |
 | bob@shoplab.test | bob123 |
 
+Lab coupons for the Cart page: `WELCOME10` (€10.00 off) and `SPRING50` (€50.00 off).
+
 Stop the server with `Ctrl+C`. Reset the data with `npm run reset-db`.
 
 See [`shoplab/README.md`](shoplab/README.md) for development mode, tests, the project structure and troubleshooting.
