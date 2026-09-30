@@ -70,9 +70,9 @@ export function buildOrder(cart, couponCode) {
     items: cart.map((line) => ({
       productId: line.productId,
       quantity: line.quantity,
-      unitPrice: line.price,
+      // unitPrice: line.price,
     })),
-    total: orderTotal(cart, code),
+    // total: orderTotal(cart, code),
     couponCode: code || undefined,
     discount: couponDiscount(code),
   };
