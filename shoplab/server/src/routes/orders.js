@@ -65,7 +65,7 @@ router.post('/', requireLogin, (req, res) => {
     const correctUnitPriceCents = product.price_cents ?? Math.round((Number(product.price) || 0) * 100);
     const clientUnitPriceCents = Math.round((Number(item.unitPrice) || 0) * 100);
 
-    // Proverka za manipulacija so cenata na poedinechen proizvod
+    
     if (clientUnitPriceCents !== correctUnitPriceCents) {
       return res.status(400).json({ 
         error: `Obid za manipulacija so cenata! Cenata za proizvodot "${product.name}" e izmeneta.` 
@@ -80,7 +80,7 @@ router.post('/', requireLogin, (req, res) => {
     calculatedSubTotals += correctUnitPriceCents * quantity;
   }
 
-  // Presmetka na tochniot popust na serverot
+  
   let correctDiscountCents = 0;
   if (coupon) {
     if (coupon.discount_cents) {
@@ -93,7 +93,7 @@ router.post('/', requireLogin, (req, res) => {
   }
   correctDiscountCents = Math.min(correctDiscountCents, calculatedSubTotals);
 
-  // PROVERKA ZA POPUST: Ako ZAP go promenil popustot
+  
   const clientDiscountCents = Math.round((Number(discount) || 0) * 100);
   if (discount !== undefined && clientDiscountCents !== correctDiscountCents) {
     return res.status(400).json({
@@ -101,10 +101,9 @@ router.post('/', requireLogin, (req, res) => {
     });
   }
 
-  // Presmetka na tochnata vkupna suma na serverot
   const correctTotalCents = Math.max(0, calculatedSubTotals - correctDiscountCents);
 
-  // PROVERKA ZA TOTAL: Ako ZAP ja promenil vkupnata suma (total)
+  
   const clientTotalCents = Math.round((Number(total) || 0) * 100);
   if (total !== undefined && clientTotalCents !== correctTotalCents) {
     return res.status(400).json({
