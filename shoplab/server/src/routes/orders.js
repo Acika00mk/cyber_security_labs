@@ -33,9 +33,14 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  const body = req.body || {};
+  const {items, couponCode} = body;
+
+  if (Object.hasOwn(body, "total") || Object.hasOwn(body, "discount")) {
+    return res.status(400).json({error: "Price fields are not accepted"});
+  }
   if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Your cart is empty' });
+    return res.status(400).json({error: "Your cart is empty"});
   }
 
   let coupon = null;
@@ -48,20 +53,32 @@ router.post('/', requireLogin, (req, res) => {
 
   const lines = [];
   for (const item of items) {
+     if (!item || typeof item !== 'object') {
+      return res.status(400).json({ error: 'Invalid order item' });
+    }
     const product = findProduct(item.productId);
     if (!product) {
       return res.status(400).json({ error: 'Unknown product' });
     }
+
+    const quantity = item.quantity;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+      return res.status(400).json({ error: 'Invalid quantity' });
+    }
+
+
     lines.push({
       productId: product.id,
-      quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
+      quantity,
+      unitPriceCents: product.price_cents,
     });
   }
 
   // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
-  const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
+  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
+  const couponDiscountCents = coupon ? Math.max(0, coupon.discount_cents) : 0;
+  const discountCents = Math.min(couponDiscountCents, subtotalCents);
+  const totalCents = subtotalCents - discountCents;
   const orderId = transaction(() => {
     const order = db
       .prepare(
