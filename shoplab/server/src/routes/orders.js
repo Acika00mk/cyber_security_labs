@@ -33,7 +33,7 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  const { items, couponCode, discount } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' });
   }
@@ -55,12 +55,12 @@ router.post('/', requireLogin, (req, res) => {
     lines.push({
       productId: product.id,
       quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
+      unitPriceCents: product.price_cents,
     });
   }
 
   // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
+  const totalCents = Math.round(lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0));
   const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
   const orderId = transaction(() => {
     const order = db
