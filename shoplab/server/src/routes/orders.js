@@ -81,7 +81,7 @@ router.post("/", requireLogin, (req, res) => {
       )
       .run(
         req.session.userId,
-        totalCents,
+        totalCents - discountCents,
         "paid",
         new Date().toISOString(),
         coupon ? coupon.code : null,

@@ -35,7 +35,7 @@ export default function Cart({ cart, onCartChange, user }) {
           ? ` (discount ${formatPrice(result.discount)})`
           : "";
       setMessage(
-        `Order #${result.orderId} placed – total ${formatPrice(result.total)}${saved}`,
+        `Order #${result.orderId} placed – total ${formatPrice(result.total- result.discount)}${saved}`,
       );
     } catch (err) {
       setError(err.message);
