@@ -1,12 +1,22 @@
-const express = require('express');
-const { db, transaction, findProduct, findCoupon } = require('../db');
-const requireLogin = require('../middleware/requireLogin');
+const express = require("express");
+const { db, transaction, findProduct, findCoupon } = require("../db");
+const requireLogin = require("../middleware/requireLogin");
 
 const router = express.Router();
 
-router.get('/', requireLogin, (req, res) => {
+function calculateTotalCents(lines) {
+  return lines.reduce((sum, line) => {
+    const product = findProduct(line.productId);
+    if (!product) {
+      throw new Error(`Unknown product ID: ${line.productId}`);
+    }
+    return sum + (Number(product.price_cents) || 0) * (line.quantity || 1);
+  }, 0);
+}
+
+router.get("/", requireLogin, (req, res) => {
   const orders = db
-    .prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC')
+    .prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC")
     .all(req.session.userId);
   const itemsQuery = db.prepare(`
     SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
@@ -28,64 +38,76 @@ router.get('/', requireLogin, (req, res) => {
         quantity: item.quantity,
         unitPrice: item.unit_price_cents / 100,
       })),
-    }))
+    })),
   );
 });
 
-router.post('/', requireLogin, (req, res) => {
+router.post("/", requireLogin, (req, res) => {
   const { items, total, couponCode, discount } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Your cart is empty' });
+    return res.status(400).json({ error: "Your cart is empty" });
   }
 
   let coupon = null;
   if (couponCode) {
     coupon = findCoupon(couponCode);
     if (!coupon) {
-      return res.status(400).json({ error: 'Invalid coupon' });
+      return res.status(400).json({ error: "Invalid coupon" });
     }
   }
 
   const lines = [];
   for (const item of items) {
     const product = findProduct(item.productId);
+    console.log(coupon);
+    console.log(product);
     if (!product) {
-      return res.status(400).json({ error: 'Unknown product' });
+      return res.status(400).json({ error: "Unknown product" });
     }
     lines.push({
       productId: product.id,
       quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
+      unitPriceCents: Number(product.price_cents) || 0,
     });
   }
 
   // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
-  const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
+  const totalCents = calculateTotalCents(lines);
+  const discountCents = coupon ? coupon.discount_cents : 0;
   const orderId = transaction(() => {
     const order = db
       .prepare(
         `INSERT INTO orders (user_id, total_cents, status, created_at, coupon_code, discount_cents)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .run(
         req.session.userId,
         totalCents,
-        'paid',
+        "paid",
         new Date().toISOString(),
         coupon ? coupon.code : null,
-        discountCents
+        discountCents,
       );
     const insertItem = db.prepare(
-      'INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)'
+      "INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)",
     );
     for (const line of lines) {
-      insertItem.run(order.lastInsertRowid, line.productId, line.quantity, line.unitPriceCents);
+      insertItem.run(
+        order.lastInsertRowid,
+        line.productId,
+        line.quantity,
+        line.unitPriceCents,
+      );
     }
     return order.lastInsertRowid;
   });
 
-  res.status(201).json({ orderId, total: totalCents / 100, discount: discountCents / 100, status: 'paid' });
+  res.status(201).json({
+    orderId,
+    total: totalCents / 100,
+    discount: discountCents / 100,
+    status: "paid",
+  });
 });
 
 module.exports = router;
