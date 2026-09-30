@@ -66,15 +66,13 @@ export function orderTotal(cart, couponCode) {
 
 export function buildOrder(cart, couponCode) {
   const code = normalizeCoupon(couponCode);
+
   return {
     items: cart.map((line) => ({
       productId: line.productId,
       quantity: line.quantity,
-      unitPrice: line.price,
     })),
-    total: orderTotal(cart, code),
     couponCode: code || undefined,
-    discount: couponDiscount(code),
   };
 }
 
