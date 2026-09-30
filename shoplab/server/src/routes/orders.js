@@ -22,7 +22,8 @@ router.get('/', requireLogin, (req, res) => {
       total: order.total_cents / 100,
       couponCode: order.coupon_code,
       discount: (order.discount_cents || 0) / 100,
-      items: itemsQuery.all(order.id).map((item) => ({
+      items: itemsQuery.all(order.id)
+      .map((item) => ({
         productId: item.product_id,
         name: item.name,
         quantity: item.quantity,
@@ -33,7 +34,7 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  const { items, couponCode } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' });
   }
@@ -52,16 +53,26 @@ router.post('/', requireLogin, (req, res) => {
     if (!product) {
       return res.status(400).json({ error: 'Unknown product' });
     }
+
+    const quantity = Number(item.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+      return res.status(400).json({error: 'Invalid quantity'});
+    }
+
+
+
     lines.push({
       productId: product.id,
-      quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
+      quantity,
+      unitPriceCents: product.price_cents,
     });
   }
 
   // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
-  const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
+  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
+  const discountCents = coupon ? Math.min(coupon.discount_cents, subtotalCents) : 0;
+  const totalCents = subtotalCents - discountCents;
+
   const orderId = transaction(() => {
     const order = db
       .prepare(
