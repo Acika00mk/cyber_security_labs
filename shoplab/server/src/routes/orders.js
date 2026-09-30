@@ -43,7 +43,7 @@ router.get("/", requireLogin, (req, res) => {
 });
 
 router.post("/", requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  const { items, couponCode } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Your cart is empty" });
   }
@@ -59,8 +59,7 @@ router.post("/", requireLogin, (req, res) => {
   const lines = [];
   for (const item of items) {
     const product = findProduct(item.productId);
-    console.log(coupon);
-    console.log(product);
+
     if (!product) {
       return res.status(400).json({ error: "Unknown product" });
     }
