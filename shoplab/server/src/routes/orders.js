@@ -55,7 +55,7 @@ router.post('/', requireLogin, (req, res) => {
       return res.status(400).json({ error: 'Unknown product' });
     }
 
-    if (item.quantity <= 0) {
+    if (item.quantity <= 0 || item.quantity > 10) {
       return res.status(400).json({ error: 'Invalid quantity' });
     }
 
