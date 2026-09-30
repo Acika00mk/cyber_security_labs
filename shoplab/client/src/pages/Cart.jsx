@@ -1,23 +1,28 @@
 import { useState } from 'react';
 import { api } from '../api.js';
 import {
-  MAX_QUANTITY, buildOrder, cartTotal, formatPrice, isValidQuantity, lineTotal, removeFromCart, setQuantity,
+  MAX_QUANTITY, buildOrder, cartTotal, couponDiscount, formatPrice, isValidQuantity, lineTotal, orderTotal,
+  removeFromCart, setQuantity,
 } from '../cart.js';
 
 export default function Cart({ cart, onCartChange, user }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
 
   const allValid = cart.every((line) => isValidQuantity(line.quantity));
+  const discount = couponDiscount(couponCode);
 
   async function placeOrder() {
     setError('');
     setBusy(true);
     try {
-      const result = await api.placeOrder(buildOrder(cart));
+      const result = await api.placeOrder(buildOrder(cart, couponCode));
       onCartChange([]);
-      setMessage(`Order #${result.orderId} placed – total ${formatPrice(result.total)}`);
+      setCouponCode('');
+      const saved = result.discount > 0 ? ` (discount ${formatPrice(result.discount)})` : '';
+      setMessage(`Order #${result.orderId} placed – total ${formatPrice(result.total)}${saved}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -60,7 +65,18 @@ export default function Cart({ cart, onCartChange, user }) {
         </tbody>
       </table>
       <div className="checkout">
-        <p className="total">Total: {formatPrice(cartTotal(cart))}</p>
+        <label className="coupon">
+          Coupon code
+          <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Optional" />
+        </label>
+        {couponCode.trim() && !discount && <p className="error">Unknown coupon code</p>}
+        {discount > 0 && (
+          <>
+            <p className="muted">Subtotal: {formatPrice(cartTotal(cart))}</p>
+            <p className="muted">Discount: -{formatPrice(discount)}</p>
+          </>
+        )}
+        <p className="total">Total: {formatPrice(orderTotal(cart, couponCode))}</p>
         {error && <p className="error">{error}</p>}
         {user ? (
           <button onClick={placeOrder} disabled={!allValid || busy}>Place order</button>

@@ -51,6 +51,15 @@ npm test
 | alice@shoplab.test | alice123 |
 | bob@shoplab.test | bob123 |
 
+## Lab coupons
+
+Enter a coupon code on the Cart page before clicking **Place order**.
+
+| Code | Discount |
+|---|---|
+| WELCOME10 | €10.00 off the order |
+| SPRING50 | €50.00 off the order |
+
 ## Project structure
 
 ```
