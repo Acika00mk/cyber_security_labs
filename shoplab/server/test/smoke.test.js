@@ -51,3 +51,20 @@ test('an order with a coupon code does not crash the server', async () => {
     .send({ items: [{ productId: 3, quantity: 1 }], couponCode: 'WELCOME10' });
   assert.ok(res.status < 500, `unexpected status ${res.status}`);
 });
+
+test('an order with a client price field is rejected with 400', async () => {
+  const res = await agent.post('/api/orders').send({
+    items: [{ productId: 3, quantity: 1, unitPrice: 399 }],
+    total: 399,
+  });
+
+  assert.strictEqual(res.status, 400);
+  assert.match(res.body.error, /price|total/i);
+});
+
+test('an order with an invalid quantity is rejected with 400', async () => {
+  const res = await agent.post('/api/orders').send({ items: [{ productId: 3, quantity: 0 }] });
+
+  assert.strictEqual(res.status, 400);
+  assert.match(res.body.error, /quantity/i);
+});

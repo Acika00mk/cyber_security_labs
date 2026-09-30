@@ -33,12 +33,25 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
+  const { items, couponCode, discount } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' });
   }
 
+  const hasClientPrice = (value) => value != null && ['price', 'unitPrice', 'total'].some((key) => Object.hasOwn(value, key));
+
+  if (hasClientPrice(req.body) || items.some(hasClientPrice)) {
+    return res.status(400).json({ error: 'Client price fields are not allowed' });
+  }
+
+  for (const item of items) {
+    if (!item || !Number.isSafeInteger(item.quantity) || item.quantity < 1) {
+      return res.status(400).json({ error: 'Invalid quantity' });
+    }
+  }
+
   let coupon = null;
+  
   if (couponCode) {
     coupon = findCoupon(couponCode);
     if (!coupon) {
@@ -47,6 +60,7 @@ router.post('/', requireLogin, (req, res) => {
   }
 
   const lines = [];
+  let total = 0;
   for (const item of items) {
     const product = findProduct(item.productId);
     if (!product) {
@@ -55,10 +69,12 @@ router.post('/', requireLogin, (req, res) => {
     lines.push({
       productId: product.id,
       quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
+      unitPriceCents: Math.round((Number(product.unitPrice) || 0) * 100),
     });
+    total += item.quantity * Math.round((Number(product.price_cents) || 0) * 100);
   }
 
+  console.log(total);
   // Amounts are stored in cents to avoid floating point rounding issues.
   const totalCents = Math.round((Number(total) || 0) * 100);
   const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
