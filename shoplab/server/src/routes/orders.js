@@ -33,7 +33,6 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.post('/', requireLogin, (req, res) => {
-  // Only take WHAT the user wants. Ignore total, discount, and prices.
   const { items, couponCode } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty' });
