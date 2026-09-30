@@ -54,7 +54,7 @@ router.post('/', requireLogin, (req, res) => {
       return res.status(400).json({ error: 'Unknown product' });
     }
 
-    // PROVERKA ZA KOLICINA (QUANTITY):
+    
     const quantity = parseInt(item.quantity, 10);
     if (isNaN(quantity) || quantity < 1) {
       return res.status(400).json({
