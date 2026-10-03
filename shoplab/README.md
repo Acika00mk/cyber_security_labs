@@ -44,6 +44,12 @@ This deletes the database file (`server/data/shoplab.db`). The next start create
 npm test
 ```
 
+## Lab guides
+
+| Lab | Guide |
+|---|---|
+| Week 2 – SQL injection | [`LAB2.md`](LAB2.md) |
+
 ## Lab accounts
 
 | Email | Password |

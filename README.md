@@ -9,6 +9,7 @@ Lab material for the web security course. Each lab uses a small application that
 | Lab | Folder | Description |
 |---|---|---|
 | Week 1 – How the web works and how it breaks | [`shoplab/`](shoplab/) | ShopLab, a small online shop (Express + React + SQLite) |
+| Week 2 – Injection (SQL) | [`shoplab/LAB2.md`](shoplab/LAB2.md) | Find string-built SQL, exploit it, fix with parameters and schema validation |
 
 ## Quick start (ShopLab)
 

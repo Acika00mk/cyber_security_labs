@@ -1,5 +1,5 @@
 const express = require('express');
-const { db, findProduct } = require('../db');
+const { db } = require('../db');
 
 const router = express.Router();
 
@@ -14,12 +14,24 @@ function toJson(product) {
 }
 
 router.get('/', (req, res) => {
-  const products = db.prepare('SELECT * FROM products ORDER BY id').all();
-  res.json(products.map(toJson));
+  const { search, sort } = req.query;
+
+  let sql = 'SELECT * FROM products';
+  if (search) {
+    sql += " WHERE name LIKE '%" + search + "%' OR description LIKE '%" + search + "%'";
+  }
+  sql += ' ORDER BY ' + (sort || 'id');
+
+  try {
+    const products = db.prepare(sql).all();
+    res.json(products.map(toJson));
+  } catch (err) {
+    res.status(400).json({ error: 'Could not search products' });
+  }
 });
 
 router.get('/:id', (req, res) => {
-  const product = findProduct(req.params.id);
+  const product = db.prepare('SELECT * FROM products WHERE id = ' + req.params.id).get();
   if (!product) return res.status(404).json({ error: 'Product not found' });
   res.json(toJson(product));
 });

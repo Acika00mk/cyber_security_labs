@@ -13,7 +13,8 @@ db.exec(`
     id INTEGER PRIMARY KEY,
     email TEXT UNIQUE,
     name TEXT,
-    password_hash TEXT
+    password_hash TEXT,
+    password TEXT
   );
   CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY,
@@ -53,11 +54,20 @@ if (!orderColumns.includes('discount_cents')) {
   db.exec('ALTER TABLE orders ADD COLUMN discount_cents INTEGER DEFAULT 0');
 }
 
+const users = [
+  ['alice@shoplab.test', 'Alice', 'alice123'],
+  ['bob@shoplab.test', 'Bob', 'bob123'],
+];
+
+// Databases created before the login rewrite are missing the password column.
+const userColumns = db.prepare('PRAGMA table_info(users)').all().map((column) => column.name);
+if (!userColumns.includes('password')) {
+  db.exec('ALTER TABLE users ADD COLUMN password TEXT');
+  const setPassword = db.prepare('UPDATE users SET password = ? WHERE email = ?');
+  for (const [email, , password] of users) setPassword.run(password, email);
+}
+
 function seed() {
-  const users = [
-    ['alice@shoplab.test', 'Alice', 'alice123'],
-    ['bob@shoplab.test', 'Bob', 'bob123'],
-  ];
   const products = [
     [1, 'Mechanical Keyboard', 'Tactile switches, full-size layout, white backlight.', 8900, '/images/keyboard.svg'],
     [2, 'Noise-Cancelling Headphones', 'Over-ear, 30 hours of battery, travel case included.', 24900, '/images/headphones.svg'],
@@ -66,9 +76,9 @@ function seed() {
     [5, 'Laptop Stand', 'Aluminium, adjustable height, fits 11 to 17 inch laptops.', 4500, '/images/stand.svg'],
   ];
 
-  const insertUser = db.prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)');
+  const insertUser = db.prepare('INSERT INTO users (email, name, password_hash, password) VALUES (?, ?, ?, ?)');
   for (const [email, name, password] of users) {
-    insertUser.run(email, name, bcrypt.hashSync(password, 10));
+    insertUser.run(email, name, bcrypt.hashSync(password, 10), password);
   }
   const insertProduct = db.prepare(
     'INSERT INTO products (id, name, description, price_cents, image) VALUES (?, ?, ?, ?, ?)'

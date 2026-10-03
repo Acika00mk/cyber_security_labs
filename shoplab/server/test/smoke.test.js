@@ -40,6 +40,18 @@ test('products list has 5 products and product 3 costs 399', async () => {
   assert.strictEqual(res.body.find((p) => p.id === 3).price, 399);
 });
 
+test('product search returns an array', async () => {
+  const res = await request(app).get('/api/products').query({ search: 'hub' });
+  assert.strictEqual(res.status, 200);
+  assert.ok(Array.isArray(res.body));
+});
+
+test('GET /api/products/3 returns the 4K monitor', async () => {
+  const res = await request(app).get('/api/products/3');
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.name, '4K Monitor');
+});
+
 test('an order without price fields does not crash the server', async () => {
   const res = await agent.post('/api/orders').send({ items: [{ productId: 3, quantity: 1 }] });
   assert.ok(res.status < 500, `unexpected status ${res.status}`);

@@ -20,7 +20,13 @@ export const api = {
     request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   me: () => request('/auth/me'),
-  products: () => request('/products'),
+  products: ({ search = '', sort = '' } = {}) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (sort) params.set('sort', sort);
+    const query = params.toString();
+    return request(`/products${query ? `?${query}` : ''}`);
+  },
   orders: () => request('/orders'),
   placeOrder: (order) => request('/orders', { method: 'POST', body: JSON.stringify(order) }),
 };

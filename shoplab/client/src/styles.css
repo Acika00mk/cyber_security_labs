@@ -53,8 +53,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 button.link { background: none; color: var(--accent); padding: 0; }
 button.theme { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 
-input { font: inherit; padding: 0.45rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); }
+input, select { font: inherit; padding: 0.45rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); }
 input[type='number'] { width: 5rem; }
+.toolbar { flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; }
+.toolbar label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.9rem; }
+.toolbar .search { flex: 1; min-width: 12rem; }
+.toolbar .search input { width: 100%; }
 
 .narrow { max-width: 380px; margin: 0 auto; }
 .form { display: flex; flex-direction: column; gap: 0.8rem; }
