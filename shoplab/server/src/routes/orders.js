@@ -32,14 +32,29 @@ router.get('/', requireLogin, (req, res) => {
   );
 });
 
+const MAX_ITEMS = 20;
+const MAX_QUANTITY = 10;
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasOnlyKeys(object, allowed) {
+  return Object.keys(object).every((key) => allowed.includes(key));
+}
+
 router.post('/', requireLogin, (req, res) => {
-  const { items, total, couponCode, discount } = req.body || {};
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Your cart is empty' });
-  }
+  const invalid = () => res.status(400).json({ error: 'Invalid order' });
+
+  // The client may only say WHAT it wants to buy and which coupon it has.
+  // Prices, discounts and totals come from the database.
+  if (!isPlainObject(req.body) || !hasOnlyKeys(req.body, ['items', 'couponCode'])) return invalid();
+  const { items, couponCode } = req.body;
+  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) return invalid();
 
   let coupon = null;
-  if (couponCode) {
+  if (couponCode !== undefined && couponCode !== null) {
+    if (typeof couponCode !== 'string') return invalid();
     coupon = findCoupon(couponCode);
     if (!coupon) {
       return res.status(400).json({ error: 'Invalid coupon' });
@@ -48,20 +63,22 @@ router.post('/', requireLogin, (req, res) => {
 
   const lines = [];
   for (const item of items) {
-    const product = findProduct(item.productId);
+    if (!isPlainObject(item) || !hasOnlyKeys(item, ['productId', 'quantity'])) return invalid();
+    const { productId, quantity } = item;
+    if (!Number.isInteger(productId) || !Number.isInteger(quantity)) return invalid();
+    if (quantity < 1 || quantity > MAX_QUANTITY) return invalid();
+
+    const product = findProduct(productId);
     if (!product) {
       return res.status(400).json({ error: 'Unknown product' });
     }
-    lines.push({
-      productId: product.id,
-      quantity: item.quantity ?? 1,
-      unitPriceCents: Math.round((Number(item.unitPrice) || 0) * 100),
-    });
+    lines.push({ productId: product.id, quantity, unitPriceCents: product.price_cents });
   }
 
   // Amounts are stored in cents to avoid floating point rounding issues.
-  const totalCents = Math.round((Number(total) || 0) * 100);
-  const discountCents = coupon ? Math.round((Number(discount) || 0) * 100) : 0;
+  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
+  const discountCents = coupon ? Math.min(coupon.discount_cents, subtotalCents) : 0;
+  const totalCents = subtotalCents - discountCents;
   const orderId = transaction(() => {
     const order = db
       .prepare(

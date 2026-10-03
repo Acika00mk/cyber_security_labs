@@ -1,7 +1,8 @@
 const STORAGE_KEY = 'shoplab.cart';
 export const MAX_QUANTITY = 10;
 
-// Fixed amount in euros taken off the order total.
+// Fixed amount in euros taken off the order total. Used only to preview the discount;
+// the server applies the amount stored in the database.
 export const COUPONS = {
   WELCOME10: 10,
   SPRING50: 50,
@@ -70,11 +71,8 @@ export function buildOrder(cart, couponCode) {
     items: cart.map((line) => ({
       productId: line.productId,
       quantity: line.quantity,
-      unitPrice: line.price,
     })),
-    total: orderTotal(cart, code),
     couponCode: code || undefined,
-    discount: couponDiscount(code),
   };
 }
 
