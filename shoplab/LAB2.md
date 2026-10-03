@@ -111,7 +111,7 @@ Repeat **every** payload from Part A. After your fix:
 
 | Attack | Expected result |
 |---|---|
-| Login bypass (comment or `OR 1=1`) | `401` |
+| Login bypass (comment or `OR 1=1`) | `401`, or `400` if schema rejects the malformed email |
 | `UNION` in `search` | No user emails/passwords in the JSON array |
 | `UNION` in `:id` | `404` or `400`, not another user's row |
 | Malicious `sort` (CASE / subquery) | `400` |
