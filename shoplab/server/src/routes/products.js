@@ -1,5 +1,6 @@
 const express = require('express');
 const { db } = require('../db');
+const { searchSchema } = require('../validation/catalog');
 
 const router = express.Router();
 
@@ -16,15 +17,35 @@ function toJson(product) {
 router.get('/', (req, res) => {
   const { search, sort } = req.query;
 
+  const parseBody = searchSchema.safeParse(req.query)
+
+  if(!parseBody.success) {
+    return res.status(400).json({error: "Invalid search"})
+  }
+
+  let params = []
+
   let sql = 'SELECT * FROM products';
   if (search) {
-    sql += " WHERE name LIKE '%" + search + "%' OR description LIKE '%" + search + "%'";
+    sql += " WHERE name LIKE ? OR description LIKE ?";
+    params.push('%' + search +'%', '%' + search +'%')
   }
-  sql += ' ORDER BY ' + (sort || 'id');
+  sql += ' ORDER BY ?';
+  params.push(sort)
 
+  console.log(params)
   try {
-    const products = db.prepare(sql).all();
-    res.json(products.map(toJson));
+    if (params) {
+      const products = db.prepare(sql).all(...params);
+      console.log(products)
+      res.json(products.map(toJson));
+    } else {
+      const products = db.prepare(sql).all();
+      console.log(products)
+      res.json(products.map(toJson));
+    }
+
+    
   } catch (err) {
     res.status(400).json({ error: 'Could not search products' });
   }
