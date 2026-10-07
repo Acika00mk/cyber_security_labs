@@ -27,6 +27,11 @@ export const api = {
     const query = params.toString();
     return request(`/products${query ? `?${query}` : ''}`);
   },
-  orders: () => request('/orders'),
+  orders: ({ product = '' } = {}) => {
+    const params = new URLSearchParams();
+    if (product) params.set('product', product);
+    const query = params.toString();
+    return request(`/orders${query ? `?${query}` : ''}`);
+  },
   placeOrder: (order) => request('/orders', { method: 'POST', body: JSON.stringify(order) }),
 };

@@ -19,9 +19,9 @@ Lab accounts:
 
 ## What you must do
 
-1. **Find** every query in the catalog module (`server/src/routes/products.js`) and the login handler (`server/src/routes/auth.js`) that is built by concatenating user input into the SQL string.
+1. **Find** every query in the catalog module (`server/src/routes/products.js`), the login handler (`server/src/routes/auth.js`), and the order list (`server/src/routes/orders.js`, `GET /` only) that is built by concatenating user input into the SQL string.
 2. **Rewrite** those queries as parameterised statements (prepared statements with `?` placeholders and bound values).
-3. **Add** a second layer: validate input with a schema (for example [Zod](https://zod.dev/)) before it reaches the database. Boundaries: search text length, allowed sort options, numeric product id, login email/password shape.
+3. **Add** a second layer: validate input with a schema (for example [Zod](https://zod.dev/)) before it reaches the database. Boundaries: search text length, allowed sort options, numeric product id, login email/password shape, order product filter length.
 4. **Remember:** `ORDER BY` column names cannot be bound as parameters. Use an allow-list of safe sort keys mapped to fixed SQL fragments.
 5. **Restore secure login:** look up the user by email with a parameter, then verify the password with `bcrypt` against `password_hash` in the database. Do not compare passwords inside SQL.
 6. **Prove** that each attack payload below fails after your fix (401, 400, or empty safe results — not another user's data).
@@ -94,6 +94,7 @@ Work in:
 
 - `server/src/routes/products.js` – list, search, sort, and get-by-id
 - `server/src/routes/auth.js` – login
+- `server/src/routes/orders.js` – list orders (`GET /` only; leave `POST /` unchanged)
 - Add a small validation module if it keeps the routes readable (for example `server/src/validation/catalog.js`)
 
 Checklist:
@@ -103,9 +104,10 @@ Checklist:
 - [ ] `sort` is chosen only from a fixed map (allow-list).
 - [ ] Product `id` is validated as a positive integer before querying.
 - [ ] Login uses `?` for email and `bcrypt.compareSync` for the password.
+- [ ] Order list uses `?` for `user_id` and for the `LIKE` pattern when filtering by product name.
 - [ ] Schema validation rejects oversized or malformed input before the database runs.
 
-## Part C – Prove the fix
+## Part C – Prove the fix (catalog and login)
 
 Repeat **every** payload from Part A. After your fix:
 
@@ -119,7 +121,51 @@ Repeat **every** payload from Part A. After your fix:
 | Normal search `hub` | `200`, only matching products |
 | Normal sort `price_cents DESC` or your allow-list equivalent | `200`, products ordered by price |
 
-Keep brief notes for your report: file and line of each vulnerable query, how parameterisation fixes it, and one example of input that schema validation blocks.
+Continue to **Part D** for the order-history exercise (Lab 2B).
+
+## Part D – Reproduce: order history filter (Lab 2B)
+
+**My orders** can filter by product name: `GET /api/orders?product=...`. The server builds that filter by joining the `product` query parameter into SQL.
+
+### Setup
+
+1. Log in as **Alice**. Place an order that includes the **4K Monitor** (product id 3).
+2. Log in as **Bob** (another browser or after logging out). Place an order for the **Mechanical Keyboard** (product id 1).
+3. As Alice, open **My orders** and filter by `Monitor`. You should see only Alice's monitor order.
+
+### Cross-user leak
+
+While still logged in as Alice, call the API with a crafted `product` value that changes the `WHERE` clause (Bob's `user_id` in the database is **2**):
+
+```bash
+curl -s -b jar -c jar -H 'Content-Type: application/json' \
+  -d '{"email":"alice@shoplab.test","password":"alice123"}' \
+  http://localhost:3000/api/auth/login
+
+curl -sG -b jar http://localhost:3000/api/orders \
+  --data-urlencode "product=%') OR user_id=2 OR ('1'='1"
+```
+
+Before your fix, the JSON array can include **Bob's order** (keyboard) even though Alice is logged in. Explain how the `LIKE '...'` string was closed and how `OR user_id=2` was injected.
+
+Optional: try a `UNION` in `product` (same idea as Part A2).
+
+## Part E – Fix: orders list
+
+In `server/src/routes/orders.js` (`GET /` only):
+
+- Always bind `user_id` with `?` (from `req.session.userId`, never concatenated).
+- Bind the product filter as `LIKE ?` with `'%' + product + '%'` passed as data.
+- Add schema validation, for example `orderListQuerySchema` with optional `product` string (max length 100).
+
+Do not change secure order placement (`POST /`).
+
+## Part F – Prove: Lab 2B
+
+| Attack / use case | Expected after fix |
+|---|---|
+| Cross-user leak (`product` payload above) | `200` but **only Alice's** orders (no Bob keyboard order) |
+| Normal filter `product=Monitor` | `200`, only Alice's orders that contain a monitor |
 
 ## Bonus (optional)
 
@@ -132,4 +178,6 @@ This is not required for a passing grade on the core lab.
 
 ## Submit
 
-Follow your course instructions (branch name, screenshots, short write-up). Your write-up should mention **OWASP Injection** and **CWE-89** (SQL injection) in your own words.
+Follow your course instructions (branch name, screenshots, short write-up). Your write-up should mention **OWASP Injection** and **CWE-89** (SQL injection) in your own words, and list fixes in **three modules**: products, auth, and orders (`GET /`).
+
+Keep brief notes: file and line of each vulnerable query, how parameterisation fixes it, and one example of input that schema validation blocks.

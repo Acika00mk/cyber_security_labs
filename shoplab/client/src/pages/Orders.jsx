@@ -5,9 +5,18 @@ import { formatPrice } from '../cart.js';
 export default function Orders() {
   const [orders, setOrders] = useState(null);
   const [error, setError] = useState('');
+  const [product, setProduct] = useState('');
+
+  function load(filter = product) {
+    setError('');
+    api
+      .orders({ product: filter })
+      .then(setOrders)
+      .catch((err) => setError(err.message));
+  }
 
   useEffect(() => {
-    api.orders().then(setOrders).catch((err) => setError(err.message));
+    load('');
   }, []);
 
   if (error) return <p className="error">{error}</p>;
@@ -16,8 +25,23 @@ export default function Orders() {
   return (
     <section>
       <h1>My orders</h1>
+      <div className="row toolbar">
+        <label className="search">
+          Filter by product name
+          <input
+            type="search"
+            value={product}
+            onChange={(e) => setProduct(e.target.value)}
+            placeholder="e.g. Monitor"
+          />
+        </label>
+        <button type="button" onClick={() => load(product)}>Apply filter</button>
+        <button type="button" className="link" onClick={() => { setProduct(''); load(''); }}>
+          Clear
+        </button>
+      </div>
       {orders.length === 0 ? (
-        <p className="muted">You have no orders yet.</p>
+        <p className="muted">No orders match this filter.</p>
       ) : (
         <table className="card table">
           <thead>

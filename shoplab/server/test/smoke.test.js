@@ -63,3 +63,9 @@ test('an order with a coupon code does not crash the server', async () => {
     .send({ items: [{ productId: 3, quantity: 1 }], couponCode: 'WELCOME10' });
   assert.ok(res.status < 500, `unexpected status ${res.status}`);
 });
+
+test('GET /api/orders returns an array for a logged-in user', async () => {
+  const res = await agent.get('/api/orders');
+  assert.strictEqual(res.status, 200);
+  assert.ok(Array.isArray(res.body));
+});

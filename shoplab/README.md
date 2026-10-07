@@ -48,7 +48,7 @@ npm test
 
 | Lab | Guide |
 |---|---|
-| Week 2 – SQL injection | [`LAB2.md`](LAB2.md) |
+| Week 2 – SQL injection (catalog, login, order filter) | [`LAB2.md`](LAB2.md) |
 
 ## Lab accounts
 
