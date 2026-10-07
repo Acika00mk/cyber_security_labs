@@ -6,17 +6,18 @@ const router = express.Router();
 
 router.get('/', requireLogin, (req, res) => {
   const { product } = req.query;
-
-  let sql = 'SELECT * FROM orders WHERE user_id = ' + req.session.userId;
+  const params = [req.session.userId];
+  let sql = 'SELECT * FROM orders WHERE user_id = ?';
   if (product) {
     sql +=
-      " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE '%" +
-      product +
-      "%')";
+      " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE ?)";
+      params.push(`%${product}%`);
   }
+
+  
   sql += ' ORDER BY id DESC';
 
-  const orders = db.prepare(sql).all();
+  const orders = db.prepare(sql).all(...params);
   const itemsQuery = db.prepare(`
     SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
     FROM order_items oi JOIN products p ON p.id = oi.product_id
