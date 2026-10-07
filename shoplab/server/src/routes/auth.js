@@ -1,14 +1,22 @@
 const express = require('express');
 const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
+const { LoginScheme } = require('../validation/catalog');
+
 
 const router = express.Router();
 
 router.post('/login', (req, res, next) => {
   const { email, password } = req.body || {};
+
+  const parsedBody = LoginScheme.safeParse(req.body);
+  if (!parsedBody.success) {
+    return res.status(401).json({ error: 'Invalid email' });
+  }
+
   const user = db
-    .prepare("SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "'")
-    .get();
+    .prepare("SELECT * FROM users WHERE email = ? AND password = ?")
+    .get(email, password);
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
