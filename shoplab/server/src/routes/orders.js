@@ -5,9 +5,18 @@ const requireLogin = require('../middleware/requireLogin');
 const router = express.Router();
 
 router.get('/', requireLogin, (req, res) => {
-  const orders = db
-    .prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC')
-    .all(req.session.userId);
+  const { product } = req.query;
+
+  let sql = 'SELECT * FROM orders WHERE user_id = ' + req.session.userId;
+  if (product) {
+    sql +=
+      " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE '%" +
+      product +
+      "%')";
+  }
+  sql += ' ORDER BY id DESC';
+
+  const orders = db.prepare(sql).all();
   const itemsQuery = db.prepare(`
     SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
     FROM order_items oi JOIN products p ON p.id = oi.product_id
