@@ -18,12 +18,12 @@ router.get('/', (req, res) => {
 
   let sql = 'SELECT * FROM products';
   if (search) {
-    sql += " WHERE name LIKE '%" + search + "%' OR description LIKE '%" + search + "%'";
+    sql += " WHERE name LIKE %?% OR description LIKE %?%";
   }
-  sql += ' ORDER BY ' + (sort || 'id');
+  sql += ' ORDER BY ?';
 
   try {
-    const products = db.prepare(sql).all();
+    const products = db.prepare(sql).get(search, search, sort || 'id');
     res.json(products.map(toJson));
   } catch (err) {
     res.status(400).json({ error: 'Could not search products' });
