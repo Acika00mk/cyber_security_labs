@@ -6,7 +6,6 @@ const { LoginSchema } = require('../../validation/catalog');
 const router = express.Router();
 
 router.post('/login', (req, res, next) => {
-  console.log(req)
   const { email, password } = req.body || {};
 
   const parsedBody = LoginSchema.safeParse(req.body)
