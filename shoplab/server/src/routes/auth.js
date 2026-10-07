@@ -1,16 +1,22 @@
-const express = require('express');
-const { db } = require('../db');
-const requireLogin = require('../middleware/requireLogin');
+const express = require("express");
+const { db } = require("../db");
+const requireLogin = require("../middleware/requireLogin");
+const { LoginSchema } = require("../validation/catalog");
 
 const router = express.Router();
 
-router.post('/login', (req, res, next) => {
-  const { email, password } = req.body || {};
+router.post("/login", (req, res, next) => {
+  const parsedBody = LoginSchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    return res.status(400).json({ error: parsedBody.error.errors });
+  }
+  const { email, password } = parsedBody.data;
+
   const user = db
-    .prepare("SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "'")
-    .get();
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+    .prepare("SELECT id, name, email, password FROM users WHERE email = ?")
+    .get(email);
+  if (!user || user.password !== password) {
+    return res.status(401).json({ error: "Invalid email or password" });
   }
 
   req.session.regenerate((err) => {
@@ -20,16 +26,18 @@ router.post('/login', (req, res, next) => {
   });
 });
 
-router.post('/logout', (req, res) => {
+router.post("/logout", (req, res) => {
   req.session.destroy(() => {
-    res.clearCookie('shoplab.sid');
+    res.clearCookie("shoplab.sid");
     res.status(204).end();
   });
 });
 
-router.get('/me', requireLogin, (req, res) => {
-  const user = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(req.session.userId);
-  if (!user) return res.status(401).json({ error: 'Please log in' });
+router.get("/me", requireLogin, (req, res) => {
+  const user = db
+    .prepare("SELECT id, name, email FROM users WHERE id = ?")
+    .get(req.session.userId);
+  if (!user) return res.status(401).json({ error: "Please log in" });
   res.json({ id: user.id, name: user.name, email: user.email });
 });
 
