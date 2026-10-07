@@ -14,17 +14,30 @@ function toJson(product) {
 }
 
 router.get('/', (req, res) => {
-  const { search, sort } = req.query;
+  let { search, sort } = req.query;
+
+  let params = [];
+  const sortEnum  = ["id", "name", "price_cents ASC", "price_cents DESC"];
+
+  if(!sortEnum.includes(sort)){
+    sort = "id";
+  }
 
   let sql = 'SELECT * FROM products';
   if (search) {
-    sql += " WHERE name LIKE '%" + search + "%' OR description LIKE '%" + search + "%'";
+    sql += " WHERE name LIKE ? OR description LIKE ?";
+    params.push(`%${search}%`, `%${search}%`);
   }
-  sql += ' ORDER BY ' + (sort || 'id');
+  sql += ` ORDER BY ${sort}`;
 
   try {
-    const products = db.prepare(sql).all();
-    res.json(products.map(toJson));
+    if(params){
+      const products = db.prepare(sql).all(...params);
+      res.json(products.map(toJson));
+    }else{
+      const products = db.prepare(sql).all();
+      res.json(products.map(toJson));
+    }
   } catch (err) {
     res.status(400).json({ error: 'Could not search products' });
   }
