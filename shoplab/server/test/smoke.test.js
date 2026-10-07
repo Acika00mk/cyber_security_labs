@@ -33,6 +33,14 @@ test('wrong password gives 401', async () => {
   assert.strictEqual(res.status, 401);
 });
 
+test('invalid login input returns a JSON error without crashing', async () => {
+  for (const body of [{}, { email: 'invalid', password: 'alice123' }, { email: 'alice@shoplab.test', password: 123456 }]) {
+    const res = await request(app).post('/api/auth/login').send(body);
+    assert.strictEqual(res.status, 401);
+    assert.deepStrictEqual(res.body, { error: 'Invalid input fields' });
+  }
+});
+
 test('products list has 5 products and product 3 costs 399', async () => {
   const res = await request(app).get('/api/products');
   assert.strictEqual(res.status, 200);

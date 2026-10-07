@@ -4,7 +4,7 @@
   "private": true,
   "description": "ShopLab – training web shop for the web security course. Runs on your own machine only.",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.11"
   },
   "scripts": {
     "setup": "npm install && npm install --prefix server && npm install --prefix client",

@@ -6,8 +6,8 @@ ShopLab is a small online shop built for the web security course. You will use i
 
 ## Requirements
 
-- **Node.js 22.13 or newer** (check with `node -v`). Download the LTS version from [nodejs.org](https://nodejs.org/).
-- Nothing else. The database is SQLite, built into Node, and stored in a file.
+- **Node.js 22.11 or newer** (check with `node -v`). Download the LTS version from [nodejs.org](https://nodejs.org/).
+- Nothing else. The database is SQLite, built into Node, and stored in a file. The npm commands include `--experimental-sqlite` so SQLite also works on Node 22.11.
 
 ## Start the shop
 
@@ -91,7 +91,7 @@ shoplab/
 
 ## Troubleshooting
 
-- **`node:sqlite` not found, or "Unknown built-in module":** your Node.js is too old. Install Node 22.13 or newer.
+- **`node:sqlite` not found, or "Unknown built-in module":** check `node -v` and use Node 22.11 or newer. Launch with `npm start` or `npm run dev` so the required SQLite flag is included. If launching the server directly on Node 22.11, use `node --experimental-sqlite src/index.js` from `server/`. No SQLite npm package is needed.
 - **Port 3000 (or 5173) is already in use:** stop the other program, or find it with `lsof -i :3000` (macOS/Linux) or `netstat -ano | findstr :3000` (Windows). You can also set `PORT=3001` in `.env`.
 - **"401 Please log in" after restarting the server:** sessions are kept in memory, so a restart logs everyone out. Log in again.
 - **The shop shows old data:** run `npm run reset-db` and start again.
