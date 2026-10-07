@@ -9,14 +9,11 @@ router.get('/', requireLogin, (req, res) => {
 
   let sql = 'SELECT * FROM orders WHERE user_id = ' + req.session.userId;
   if (product) {
-    sql +=
-      " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE '%" +
-      product +
-      "%')";
+    sql += " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE ?)";
   }
   sql += ' ORDER BY id DESC';
 
-  const orders = db.prepare(sql).all();
+  const orders = db.prepare(sql).all(product? `%${product}%`: []);
   const itemsQuery = db.prepare(`
     SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
     FROM order_items oi JOIN products p ON p.id = oi.product_id
