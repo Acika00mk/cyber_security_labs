@@ -13,7 +13,7 @@ Lab material for the web security course. Each lab uses a small application that
 
 ## Quick start (ShopLab)
 
-Requires **Node.js 22.13 or newer** (`node -v`). Nothing else is needed: the database is SQLite, built into Node.
+Requires **Node.js 22.11 or newer** (`node -v`). Nothing else is needed: the database is SQLite, built into Node. The npm commands enable SQLite automatically, including on Node 22.11.
 
 ```bash
 cd shoplab
