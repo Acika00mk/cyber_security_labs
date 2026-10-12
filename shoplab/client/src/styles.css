@@ -79,3 +79,10 @@ input[type='number'] { width: 5rem; }
 .error { color: var(--error); font-size: 0.9rem; }
 .success { color: var(--success); font-weight: 600; }
 .badge { background: var(--bg); border: 1px solid var(--border); border-radius: 99px; padding: 0.1rem 0.6rem; font-size: 0.85rem; }
+
+.reviews { margin: 0.6rem 0; }
+.reviews-panel { margin-top: 0.5rem; padding: 0.8rem; }
+.review-list { list-style: none; margin: 0.5rem 0 1rem; padding: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.review-meta { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 0.25rem; }
+.review-form textarea { width: 100%; resize: vertical; margin-top: 0.3rem; }
+.order-line { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; margin-bottom: 0.35rem; }

@@ -45,6 +45,13 @@ db.exec(`
     discount_cents INTEGER,
     active INTEGER
   );
+  CREATE TABLE IF NOT EXISTS product_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
 `);
 
 // Databases created before coupons existed are missing these columns.
@@ -96,6 +103,21 @@ if (db.prepare('SELECT COUNT(*) AS n FROM coupons').get().n === 0) {
   const insertCoupon = db.prepare('INSERT INTO coupons (code, discount_cents, active) VALUES (?, ?, 1)');
   insertCoupon.run('WELCOME10', 1000);
   insertCoupon.run('SPRING50', 5000);
+}
+
+if (db.prepare('SELECT COUNT(*) AS n FROM product_reviews').get().n === 0) {
+  const alice = db.prepare('SELECT id FROM users WHERE email = ?').get('alice@shoplab.test');
+  if (alice) {
+    const insertReview = db.prepare(
+      'INSERT INTO product_reviews (product_id, user_id, body, created_at) VALUES (?, ?, ?, ?)'
+    );
+    insertReview.run(
+      3,
+      alice.id,
+      'Sharp picture and easy to set up. Worth it for long coding sessions.',
+      new Date('2025-09-01T10:00:00.000Z').toISOString()
+    );
+  }
 }
 
 function transaction(fn) {

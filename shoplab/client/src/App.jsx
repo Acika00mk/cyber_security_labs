@@ -57,7 +57,7 @@ export default function App() {
   } else if (route === '#/orders') {
     page = <Orders />;
   } else {
-    page = <Products cart={cart} onCartChange={updateCart} />;
+    page = <Products cart={cart} onCartChange={updateCart} user={user} />;
   }
 
   return (

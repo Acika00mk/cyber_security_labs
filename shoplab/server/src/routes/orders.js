@@ -1,22 +1,84 @@
 const express = require('express');
 const { db, transaction, findProduct, findCoupon } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
+const { orderListQuerySchema, reorderBodySchema } = require('../validation/catalog');
 
 const router = express.Router();
 
-router.get('/', requireLogin, (req, res) => {
-  const { product } = req.query;
+const MAX_ITEMS = 20;
+const MAX_QUANTITY = 10;
 
-  let sql = 'SELECT * FROM orders WHERE user_id = ' + req.session.userId;
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasOnlyKeys(object, allowed) {
+  return Object.keys(object).every((key) => allowed.includes(key));
+}
+
+function createPaidOrder(userId, lines, couponCode) {
+  let coupon = null;
+  if (couponCode !== undefined && couponCode !== null) {
+    if (typeof couponCode !== 'string') {
+      return { error: 'Invalid order', status: 400 };
+    }
+    coupon = findCoupon(couponCode);
+    if (!coupon) {
+      return { error: 'Invalid coupon', status: 400 };
+    }
+  }
+
+  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
+  const discountCents = coupon ? Math.min(coupon.discount_cents, subtotalCents) : 0;
+  const totalCents = subtotalCents - discountCents;
+  const orderId = transaction(() => {
+    const order = db
+      .prepare(
+        `INSERT INTO orders (user_id, total_cents, status, created_at, coupon_code, discount_cents)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        userId,
+        totalCents,
+        'paid',
+        new Date().toISOString(),
+        coupon ? coupon.code : null,
+        discountCents
+      );
+    const insertItem = db.prepare(
+      'INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)'
+    );
+    for (const line of lines) {
+      insertItem.run(order.lastInsertRowid, line.productId, line.quantity, line.unitPriceCents);
+    }
+    return order.lastInsertRowid;
+  });
+
+  return {
+    orderId,
+    total: totalCents / 100,
+    discount: discountCents / 100,
+    status: 'paid',
+  };
+}
+
+router.get('/', requireLogin, (req, res) => {
+  const parsed = orderListQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  const { product } = parsed.data;
+  let sql = 'SELECT * FROM orders WHERE user_id = ?';
+  const params = [req.session.userId];
   if (product) {
     sql +=
-      " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE '%" +
-      product +
-      "%')";
+      ' AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE ?)';
+    params.push(`%${product}%`);
   }
   sql += ' ORDER BY id DESC';
 
-  const orders = db.prepare(sql).all();
+  const orders = db.prepare(sql).all(...params);
   const itemsQuery = db.prepare(`
     SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
     FROM order_items oi JOIN products p ON p.id = oi.product_id
@@ -41,34 +103,35 @@ router.get('/', requireLogin, (req, res) => {
   );
 });
 
-const MAX_ITEMS = 20;
-const MAX_QUANTITY = 10;
+// Quick reorder from order history (form-friendly for the lecture demo).
+router.post('/reorder', requireLogin, (req, res) => {
+  const parsed = reorderBodySchema.safeParse(req.body || {});
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid reorder' });
+  }
 
-function isPlainObject(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
+  const { productId, quantity } = parsed.data;
+  const product = findProduct(productId);
+  if (!product) {
+    return res.status(400).json({ error: 'Unknown product' });
+  }
 
-function hasOnlyKeys(object, allowed) {
-  return Object.keys(object).every((key) => allowed.includes(key));
-}
+  const result = createPaidOrder(req.session.userId, [
+    { productId: product.id, quantity, unitPriceCents: product.price_cents },
+  ]);
+  if (result.error) {
+    return res.status(result.status).json({ error: result.error });
+  }
+
+  res.status(201).json(result);
+});
 
 router.post('/', requireLogin, (req, res) => {
   const invalid = () => res.status(400).json({ error: 'Invalid order' });
 
-  // The client may only say WHAT it wants to buy and which coupon it has.
-  // Prices, discounts and totals come from the database.
   if (!isPlainObject(req.body) || !hasOnlyKeys(req.body, ['items', 'couponCode'])) return invalid();
   const { items, couponCode } = req.body;
   if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) return invalid();
-
-  let coupon = null;
-  if (couponCode !== undefined && couponCode !== null) {
-    if (typeof couponCode !== 'string') return invalid();
-    coupon = findCoupon(couponCode);
-    if (!coupon) {
-      return res.status(400).json({ error: 'Invalid coupon' });
-    }
-  }
 
   const lines = [];
   for (const item of items) {
@@ -84,34 +147,12 @@ router.post('/', requireLogin, (req, res) => {
     lines.push({ productId: product.id, quantity, unitPriceCents: product.price_cents });
   }
 
-  // Amounts are stored in cents to avoid floating point rounding issues.
-  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
-  const discountCents = coupon ? Math.min(coupon.discount_cents, subtotalCents) : 0;
-  const totalCents = subtotalCents - discountCents;
-  const orderId = transaction(() => {
-    const order = db
-      .prepare(
-        `INSERT INTO orders (user_id, total_cents, status, created_at, coupon_code, discount_cents)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      )
-      .run(
-        req.session.userId,
-        totalCents,
-        'paid',
-        new Date().toISOString(),
-        coupon ? coupon.code : null,
-        discountCents
-      );
-    const insertItem = db.prepare(
-      'INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)'
-    );
-    for (const line of lines) {
-      insertItem.run(order.lastInsertRowid, line.productId, line.quantity, line.unitPriceCents);
-    }
-    return order.lastInsertRowid;
-  });
+  const result = createPaidOrder(req.session.userId, lines, couponCode);
+  if (result.error) {
+    return res.status(result.status).json({ error: result.error });
+  }
 
-  res.status(201).json({ orderId, total: totalCents / 100, discount: discountCents / 100, status: 'paid' });
+  res.status(201).json(result);
 });
 
 module.exports = router;

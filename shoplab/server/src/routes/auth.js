@@ -1,15 +1,20 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
+const { loginBodySchema } = require('../validation/catalog');
 
 const router = express.Router();
 
 router.post('/login', (req, res, next) => {
-  const { email, password } = req.body || {};
-  const user = db
-    .prepare("SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "'")
-    .get();
-  if (!user) {
+  const parsed = loginBodySchema.safeParse(req.body || {});
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid email or password' });
+  }
+
+  const { email, password } = parsed.data;
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 

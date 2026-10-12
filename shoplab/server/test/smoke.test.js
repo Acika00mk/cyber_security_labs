@@ -69,3 +69,20 @@ test('GET /api/orders returns an array for a logged-in user', async () => {
   assert.strictEqual(res.status, 200);
   assert.ok(Array.isArray(res.body));
 });
+
+test('GET /api/products/3/reviews returns an array', async () => {
+  const res = await request(app).get('/api/products/3/reviews');
+  assert.strictEqual(res.status, 200);
+  assert.ok(Array.isArray(res.body));
+});
+
+test('POST review requires login', async () => {
+  const res = await request(app).post('/api/products/3/reviews').send({ body: 'Nice monitor' });
+  assert.strictEqual(res.status, 401);
+});
+
+test('logged-in user can post a product review', async () => {
+  const res = await agent.post('/api/products/3/reviews').send({ body: 'Smoke test review' });
+  assert.strictEqual(res.status, 201);
+  assert.ok(res.body.id);
+});

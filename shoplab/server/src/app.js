@@ -8,6 +8,7 @@ const requestLog = require('./middleware/requestLog');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
+const reviewRoutes = require('./routes/reviews');
 const debugRoutes = require('./routes/debug');
 
 function createApp() {
@@ -19,18 +20,21 @@ function createApp() {
   }
 
   app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
   app.use(
     session({
       name: 'shoplab.sid',
       secret: process.env.SESSION_SECRET || 'change-me-in-lab',
       resave: false,
       saveUninitialized: false,
-      cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
+      // Week 3 lab: session readable from JavaScript until students set httpOnly.
+      cookie: { httpOnly: false, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
     })
   );
 
   app.use('/api', requestLog);
   app.use('/api/auth', authRoutes);
+  app.use('/api/products/:productId/reviews', reviewRoutes);
   app.use('/api/products', productRoutes);
   app.use('/api/orders', orderRoutes);
   app.use('/api/debug', debugRoutes);

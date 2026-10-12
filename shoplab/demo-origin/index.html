@@ -7,13 +7,38 @@
       body { font-family: system-ui, sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; background: #fff8e6; color: #3b3000; }
       button { font: inherit; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid #b38f00; background: #ffd24d; cursor: pointer; }
       pre { background: #fff; border: 1px solid #e0cf99; border-radius: 6px; padding: 1rem; white-space: pre-wrap; min-height: 3rem; }
+      section { margin: 2rem 0; padding-top: 1rem; border-top: 1px solid #e0cf99; }
+      form.inline { margin-top: 0.8rem; }
     </style>
   </head>
   <body>
     <h1>Another website (demo on localhost:4000)</h1>
-    <p>This page is served from a different origin than ShopLab. It only reads data; it never changes anything.</p>
-    <button id="read">Read /api/auth/me from ShopLab</button> <button id="read-products">Read /api/products from ShopLab</button>
-    <pre id="result">Click the button.</pre>
+    <p>This page is served from a <strong>different origin</strong> than ShopLab (<code>http://localhost:3000</code>). Use it only for course demos on your own machine.</p>
+
+    <section>
+      <h2>Cross-origin read (same-site cookies)</h2>
+      <p>These buttons send a request with your ShopLab cookies. The browser may still block reading the response.</p>
+      <button id="read">Read /api/auth/me from ShopLab</button>
+      <button id="read-products">Read /api/products from ShopLab</button>
+      <pre id="result">Click a button.</pre>
+    </section>
+
+    <section>
+      <h2>Cross-site request forgery (Lab 3)</h2>
+      <p>
+        Log in to ShopLab as <strong>Alice</strong>, then submit this form. It posts to ShopLab while you are on this page.
+        If the shop has no CSRF protection on reorder, Alice gets a new paid order she did not intend.
+      </p>
+      <form class="inline" action="http://localhost:3000/api/orders/reorder" method="POST">
+        <input type="hidden" name="productId" value="3" />
+        <input type="hidden" name="quantity" value="1" />
+        <button type="submit">Simulate evil site order (4K Monitor)</button>
+      </form>
+      <p class="muted" style="font-size:0.9rem">
+        Note: <code>localhost:4000</code> and <code>localhost:3000</code> are treated as the <em>same site</em> in modern browsers,
+        so your session cookie is still sent — similar to attacks across subdomains in production.
+      </p>
+    </section>
 
     <script>
       const result = document.getElementById('result');

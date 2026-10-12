@@ -49,6 +49,7 @@ npm test
 | Lab | Guide |
 |---|---|
 | Week 2 – SQL injection (catalog, login, order filter) | [`LAB2.md`](LAB2.md) |
+| Week 3 – XSS, CSRF, cookies, CSP | [`LAB3.md`](LAB3.md) |
 
 ## Lab accounts
 
@@ -85,7 +86,8 @@ shoplab/
 ## Notes
 
 - `GET /api/debug/echo` is a teaching endpoint: it shows the method, URL, headers and cookie **names** your browser sends. Cookie values are never shown.
-- The session cookie uses `secure: false` because the lab runs on plain `http://localhost`. A production site must use HTTPS and `secure: true`.
+- `npm run demo` serves [`demo-origin/`](demo-origin/) on port **4000** for cross-origin and CSRF exercises in Lab 3.
+- The session cookie uses `secure: false` because the lab runs on plain `http://localhost`. A production site must use HTTPS and `secure: true`. Lab 3 also covers `HttpOnly` and `SameSite`.
 - The server listens on `127.0.0.1` only, so other computers on your network cannot reach it.
 - Settings can be changed in a `.env` file; see `.env.example`.
 

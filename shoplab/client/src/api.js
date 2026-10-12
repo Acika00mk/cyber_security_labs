@@ -27,6 +27,9 @@ export const api = {
     const query = params.toString();
     return request(`/products${query ? `?${query}` : ''}`);
   },
+  productReviews: (productId) => request(`/products/${productId}/reviews`),
+  postReview: (productId, body) =>
+    request(`/products/${productId}/reviews`, { method: 'POST', body: JSON.stringify({ body }) }),
   orders: ({ product = '' } = {}) => {
     const params = new URLSearchParams();
     if (product) params.set('product', product);
@@ -34,4 +37,6 @@ export const api = {
     return request(`/orders${query ? `?${query}` : ''}`);
   },
   placeOrder: (order) => request('/orders', { method: 'POST', body: JSON.stringify(order) }),
+  reorder: (productId, quantity) =>
+    request('/orders/reorder', { method: 'POST', body: JSON.stringify({ productId, quantity }) }),
 };
