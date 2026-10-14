@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/orders');
 const reviewRoutes = require('./routes/reviews');
 const debugRoutes = require('./routes/debug');
 
+
 function createApp() {
   const app = express();
 
@@ -28,7 +29,7 @@ function createApp() {
       resave: false,
       saveUninitialized: false,
       // Week 3 lab: session readable from JavaScript until students set httpOnly.
-      cookie: { httpOnly: false, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
+      cookie: { httpOnly: true, sameSite: 'lax', secure: true, maxAge: 60 * 60 * 1000 },
     })
   );
 

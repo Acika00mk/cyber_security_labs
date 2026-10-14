@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { addToCart, formatPrice } from '../cart.js';
 
+import { sanitizeReview } from '../sanitize.js';
+
+
 function ProductReviews({ productId, user }) {
   const [open, setOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
@@ -54,7 +57,12 @@ function ProductReviews({ productId, user }) {
                     <strong>{review.authorName}</strong>
                     <span className="muted">{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: review.body }} />
+
+                  
+                  {/* <div dangerouslySetInnerHTML={{ __html: review.body }} /> */}
+                  {/* <span>{review.text}</span> */}
+
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeReview(review.body) }} />
                 </li>
               ))}
             </ul>
