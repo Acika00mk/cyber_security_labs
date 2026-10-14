@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="cece0b91-a864-4123-ac61-eb6518616991" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/shoplab/server/validation/auth.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shoplab/server/validation/catalog.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shoplab/client/src/pages/Products.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/shoplab/client/src/pages/Products.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shoplab/server/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/shoplab/server/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shoplab/server/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/shoplab/server/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shoplab/server/src/routes/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/shoplab/server/src/routes/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shoplab/server/src/routes/products.js" beforeDir="false" afterPath="$PROJECT_DIR$/shoplab/server/src/routes/products.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="a7ea1d2f-7ba4-4b3c-8b69-ebfadce74ee6" value="" />
+    </colors>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="50" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.9394489260551397" />
+      <entry key="MS500" value="3.821785462628205" />
+      <entry key="S2" value="4.655540793242579" />
+      <entry key="S5" value="4.8576251758787485" />
+      <entry key="S10" value="4.928022492154595" />
+      <entry key="S30" value="4.976882349744743" />
+      <entry key="S60" value="5.1149658674177" />
+      <entry key="M2" value="6.911749456172943" />
+      <entry key="M5" value="21.339003032178887" />
+      <entry key="M10" value="62.8633217870812" />
+      <entry key="M15" value="119.30595408518164" />
+      <entry key="M30" value="281.59714313211526" />
+      <entry key="H1" value="475.4205962302004" />
+      <entry key="H2" value="635.3306281199978" />
+      <entry key="H4" value="740.4078316604914" />
+      <entry key="D1" value="844.936527719735" />
+      <entry key="W1" value="864.6576929249047" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="5.917413213436756E-70" />
+      <entry key="MS500" value="1.4270079066690368E-14" />
+      <entry key="S2" value="3.4562615093978273E-4" />
+      <entry key="S5" value="0.04125177477545758" />
+      <entry key="S10" value="0.20310532926405686" />
+      <entry key="S30" value="0.5878354965455037" />
+      <entry key="S60" value="0.7720009049585028" />
+      <entry key="M2" value="0.9843821176479309" />
+      <entry key="M5" value="1.934302405368074" />
+      <entry key="M10" value="3.5120290281976634" />
+      <entry key="M15" value="4.6267911343143" />
+      <entry key="M30" value="6.533703292975941" />
+      <entry key="H1" value="8.315549147531053" />
+      <entry key="H2" value="9.769359057333581" />
+      <entry key="H4" value="10.756576830008113" />
+      <entry key="D1" value="11.771434439847777" />
+      <entry key="W1" value="11.966771516450628" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.8792875435990615" />
+      <entry key="MS500" value="3.79848707049117" />
+      <entry key="S2" value="4.648703057142268" />
+      <entry key="S5" value="4.891395220364449" />
+      <entry key="S10" value="5.118176857335291" />
+      <entry key="S30" value="5.55295141148422" />
+      <entry key="S60" value="5.879130968379016" />
+      <entry key="M2" value="7.889505908755021" />
+      <entry key="M5" value="23.2639237723661" />
+      <entry key="M10" value="66.36578645241659" />
+      <entry key="M15" value="123.92415833313139" />
+      <entry key="M30" value="288.1246156513971" />
+      <entry key="H1" value="483.7321225408538" />
+      <entry key="H2" value="645.0976155192401" />
+      <entry key="H4" value="751.1631030749392" />
+      <entry key="D1" value="856.7077244279163" />
+      <entry key="W1" value="876.6244299300695" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3JxcM7yCdUL657Cy1sRGRqLoKXs" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="sortByType" value="true" />
+    <option name="sortKey" value="BY_TYPE" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/mln/Documents/Brainster/Software Engineering/TrackFlow-Starter&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/snap/webstorm/683/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;TEXT&quot;
+    ]
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-WS-262.10968.77" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cece0b91-a864-4123-ac61-eb6518616991" name="Changes" comment="" />
+      <created>1790606109916</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1790606109916</updated>
+      <workItem from="1790606111150" duration="1126000" />
+      <workItem from="1790690842447" duration="20000" />
+      <workItem from="1790762961493" duration="5714000" />
+      <workItem from="1790923154488" duration="342000" />
+      <workItem from="1790926499556" duration="14000" />
+      <workItem from="1791199015263" duration="1988000" />
+      <workItem from="1791201684777" duration="1024000" />
+      <workItem from="1791209871442" duration="2765000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/shoplab/client/src/cart.js</url>
+          <line>78</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/shoplab/client/src/cart.js</url>
+          <line>68</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
