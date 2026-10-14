@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { addToCart, formatPrice } from '../cart.js';
+import DOMPurify from "dompurify";
 
 function ProductReviews({ productId, user }) {
   const [open, setOpen] = useState(false);
@@ -54,7 +55,12 @@ function ProductReviews({ productId, user }) {
                     <strong>{review.authorName}</strong>
                     <span className="muted">{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: review.body }} />
+                  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(review.body,{
+                    ALLOWED_TAGS:['a','b','i','u','img','p']
+                  }) }} />
+                  <div>
+                    {/* {review.body} */}
+                  </div>
                 </li>
               ))}
             </ul>
