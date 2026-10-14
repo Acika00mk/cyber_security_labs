@@ -28,7 +28,7 @@ function createApp() {
       resave: false,
       saveUninitialized: false,
       // Week 3 lab: session readable from JavaScript until students set httpOnly.
-      cookie: { httpOnly: false, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
+      cookie: { httpOnly: true, sameSite: 'lax',  maxAge: 60 * 60 * 1000 },
     })
   );
 

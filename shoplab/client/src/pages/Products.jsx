@@ -54,7 +54,7 @@ function ProductReviews({ productId, user }) {
                     <strong>{review.authorName}</strong>
                     <span className="muted">{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: review.body }} />
+                  <div>{review.text }</div>
                 </li>
               ))}
             </ul>
