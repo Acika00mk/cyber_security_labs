@@ -1,7 +1,34 @@
+let csrfToken = null;
+
+async function refreshCsrf() {
+  try {
+    const data = await request('/auth/csrf');
+    csrfToken = data.csrfToken;
+  } catch {
+    csrfToken = null;
+  }
+}
+
 async function request(path, options = {}) {
+  const method = options.method || 'GET';
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    ...options.headers,
+  };
+
+  if (method !== 'GET' && method !== 'HEAD' && path !== '/auth/login') {
+    if (!csrfToken) {
+      await refreshCsrf();
+    }
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+  }
+
   const res = await fetch(`/api${path}`, {
     credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers,
     ...options,
   });
   if (res.status === 204) return null;
@@ -16,10 +43,24 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  login: (email, password) =>
-    request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-  logout: () => request('/auth/logout', { method: 'POST' }),
-  me: () => request('/auth/me'),
+  login: async (email, password) => {
+    csrfToken = null;
+    const user = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    await refreshCsrf();
+    return user;
+  },
+  logout: () => {
+    csrfToken = null;
+    return request('/auth/logout', { method: 'POST' });
+  },
+  me: async () => {
+    const user = await request('/auth/me');
+    await refreshCsrf();
+    return user;
+  },
   products: ({ search = '', sort = '' } = {}) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);

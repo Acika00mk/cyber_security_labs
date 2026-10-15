@@ -1,6 +1,7 @@
 const express = require('express');
 const { db, transaction, findProduct, findCoupon } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
+const { requireCsrf } = require('../middleware/csrf');
 const { orderListQuerySchema, reorderBodySchema } = require('../validation/catalog');
 
 const router = express.Router();
@@ -104,7 +105,7 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 // Quick reorder from order history (form-friendly for the lecture demo).
-router.post('/reorder', requireLogin, (req, res) => {
+router.post('/reorder', requireLogin, requireCsrf, (req, res) => {
   const parsed = reorderBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid reorder' });

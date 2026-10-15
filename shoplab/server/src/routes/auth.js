@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
+const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
 
 const router = express.Router();
@@ -21,8 +22,16 @@ router.post('/login', (req, res, next) => {
   req.session.regenerate((err) => {
     if (err) return next(err);
     req.session.userId = user.id;
+    issueCsrfToken(req);
     res.json({ id: user.id, name: user.name, email: user.email });
   });
+});
+
+router.get('/csrf', requireLogin, (req, res) => {
+  if (!req.session.csrfToken) {
+    issueCsrfToken(req);
+  }
+  res.json({ csrfToken: req.session.csrfToken });
 });
 
 router.post('/logout', (req, res) => {

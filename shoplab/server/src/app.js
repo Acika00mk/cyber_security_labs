@@ -27,10 +27,17 @@ function createApp() {
       secret: process.env.SESSION_SECRET || 'change-me-in-lab',
       resave: false,
       saveUninitialized: false,
-      // Week 3 lab: session readable from JavaScript until students set httpOnly.
-      cookie: { httpOnly: false, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
+      cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
     })
   );
+
+  app.use((req, res, next) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    );
+    next();
+  });
 
   app.use('/api', requestLog);
   app.use('/api/auth', authRoutes);

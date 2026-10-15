@@ -42,7 +42,7 @@ function ProductReviews({ productId, user }) {
       </button>
       {open && (
         <div className="reviews-panel card">
-          <p className="muted small">Reviews support simple HTML for bold text.</p>
+          <p className="muted small">Reviews are plain text.</p>
           {error && <p className="error">{error}</p>}
           {reviews.length === 0 ? (
             <p className="muted">No reviews yet.</p>
@@ -54,7 +54,7 @@ function ProductReviews({ productId, user }) {
                     <strong>{review.authorName}</strong>
                     <span className="muted">{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: review.body }} />
+                  <p>{review.body}</p>
                 </li>
               ))}
             </ul>
