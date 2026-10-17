@@ -11,6 +11,7 @@ Lab material for the web security course. Each lab uses a small application that
 | Week 1 – How the web works and how it breaks | [`shoplab/`](shoplab/) | ShopLab, a small online shop (Express + React + SQLite) |
 | Week 2 – Injection (SQL) | [`shoplab/LAB2.md`](shoplab/LAB2.md) | String-built SQL in catalog, login, and order filter; fix with parameters and schema validation |
 | Week 3 – XSS, CSRF, cookies, CSP | [`shoplab/LAB3.md`](shoplab/LAB3.md) | Stored XSS in reviews, CSRF on reorder, cookie flags, Content Security Policy |
+| Week 4 – Authentication | [`shoplab/LAB4.md`](shoplab/LAB4.md) | Weak password hashes, login enumeration, JWT mistakes, rate limiting; optional extensions |
 
 ## Quick start (ShopLab)
 

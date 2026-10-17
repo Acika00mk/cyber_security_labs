@@ -1,11 +1,19 @@
+const crypto = require('node:crypto');
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
 
 const router = express.Router();
+
+// Lab 4 teaching build: secret lives in source (students move this to env).
+const JWT_SECRET = 'shoplab-jwt-secret';
+
+function sha256Hex(password) {
+  return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
+}
 
 router.post('/login', (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
@@ -15,15 +23,23 @@ router.post('/login', (req, res, next) => {
 
   const { email, password } = parsed.data;
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+
+  // Lab 4 teaching build: different messages reveal whether the account exists.
+  if (!user) {
+    return res.status(401).json({ error: 'No account with that email' });
   }
+  if (sha256Hex(password) !== user.password_hash) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  // Lab 4 teaching build: JWT has no exp claim.
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET);
 
   req.session.regenerate((err) => {
     if (err) return next(err);
     req.session.userId = user.id;
     issueCsrfToken(req);
-    res.json({ id: user.id, name: user.name, email: user.email });
+    res.json({ id: user.id, name: user.name, email: user.email, token });
   });
 });
 

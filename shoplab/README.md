@@ -50,6 +50,8 @@ npm test
 |---|---|
 | Week 2 – SQL injection (catalog, login, order filter) | [`LAB2.md`](LAB2.md) |
 | Week 3 – XSS, CSRF, cookies, CSP | [`LAB3.md`](LAB3.md) |
+| Week 4 – Authentication (hashes, JWT, rate limiting) | [`LAB4.md`](LAB4.md) |
+| Week 4 – Optional extensions | [`LAB4-EXTENSIONS.md`](LAB4-EXTENSIONS.md) |
 
 ## Lab accounts
 
@@ -75,7 +77,7 @@ shoplab/
   server/src/index.js        starts the server on 127.0.0.1:3000
   server/src/db.js           SQLite schema, seed data, small helpers
   server/src/routes/         auth, products, orders, debug
-  server/src/middleware/     requireLogin, requestLog
+  server/src/middleware/     requireLogin (session + Bearer JWT), requestLog, csrf
   server/test/               smoke tests (npm test)
   client/src/api.js          every fetch() call to the API
   client/src/cart.js         cart logic (stored in localStorage)
@@ -88,8 +90,9 @@ shoplab/
 - `GET /api/debug/echo` is a teaching endpoint: it shows the method, URL, headers and cookie **names** your browser sends. Cookie values are never shown.
 - `npm run demo` serves [`demo-origin/`](demo-origin/) on port **4000** for cross-origin and CSRF exercises in Lab 3.
 - The session cookie uses `secure: false` because the lab runs on plain `http://localhost`. A production site must use HTTPS and `secure: true`. Lab 3 also covers `HttpOnly` and `SameSite`.
+- Lab 4: login returns a JWT in `token` for `Authorization: Bearer` demos; the React UI still uses the session cookie. Fix verification, expiry, and hashing as described in [`LAB4.md`](LAB4.md).
 - The server listens on `127.0.0.1` only, so other computers on your network cannot reach it.
-- Settings can be changed in a `.env` file; see `.env.example`.
+- Settings can be changed in a `.env` file; see `.env.example` (`SESSION_SECRET`, `JWT_SECRET` after Lab 4).
 
 ## Troubleshooting
 
