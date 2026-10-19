@@ -159,7 +159,7 @@ Repeat the two curls from B1. Bodies and status codes must match.
 
 ## Part E – Reproduce the edited JWT
 
-On successful login the API also returns a **`token`** field (JWT). Cookie sessions still power the React UI; the JWT is for `Authorization: Bearer` access to protected APIs (for example `GET /api/orders`).
+On successful login the API also returns a **`token`** field (JWT). The React client stores it in **`localStorage`** under the key `shoplab.jwt` and sends `Authorization: Bearer …` on later API calls (so you stay logged in after a **server restart**, when in-memory sessions are gone). You can still use curl with the same Bearer header for `GET /api/orders`.
 
 ### E1 – Get a token as Alice
 
@@ -194,6 +194,8 @@ curl -s -H "Authorization: Bearer $FORGED" http://localhost:3000/api/orders
 ```
 
 Before your fix you should see **Bob’s** orders (not Alice’s), without knowing Bob’s password.
+
+Optional: after logging in as Alice in the browser, open DevTools → Application → Local Storage → `shoplab.jwt`, replace the value with your forged token, refresh, and open **My orders** — same bug, without curl.
 
 Also open [`server/src/routes/auth.js`](server/src/routes/auth.js) and find the **hardcoded** JWT secret in source.
 
@@ -270,6 +272,8 @@ List what you changed in:
 - `server/src/middleware/requireLogin.js` (verify Bearer tokens)
 - `server/package.json` (rate-limit dependency)
 - `.env` / `.env.example` (`JWT_SECRET`)
+
+(You normally do **not** need to change `client/src/api.js` for the core fixes; it already persists `shoplab.jwt`.)
 
 ## Bonus (optional)
 

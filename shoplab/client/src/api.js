@@ -1,4 +1,19 @@
+const JWT_KEY = 'shoplab.jwt';
+
 let csrfToken = null;
+
+function getToken() {
+  return localStorage.getItem(JWT_KEY);
+}
+
+function setToken(token) {
+  if (token) localStorage.setItem(JWT_KEY, token);
+  else localStorage.removeItem(JWT_KEY);
+}
+
+function clearToken() {
+  localStorage.removeItem(JWT_KEY);
+}
 
 async function refreshCsrf() {
   try {
@@ -16,6 +31,11 @@ async function request(path, options = {}) {
     Accept: 'application/json',
     ...options.headers,
   };
+
+  const token = getToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   if (method !== 'GET' && method !== 'HEAD' && path !== '/auth/login') {
     if (!csrfToken) {
@@ -45,16 +65,23 @@ async function request(path, options = {}) {
 export const api = {
   login: async (email, password) => {
     csrfToken = null;
-    const user = await request('/auth/login', {
+    clearToken();
+    const data = await request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+    setToken(data.token);
     await refreshCsrf();
-    return user;
+    return { id: data.id, name: data.name, email: data.email };
   },
-  logout: () => {
+  logout: async () => {
     csrfToken = null;
-    return request('/auth/logout', { method: 'POST' });
+    clearToken();
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch {
+      // Session may already be gone after a server restart.
+    }
   },
   me: async () => {
     const user = await request('/auth/me');

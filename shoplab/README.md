@@ -90,7 +90,7 @@ shoplab/
 - `GET /api/debug/echo` is a teaching endpoint: it shows the method, URL, headers and cookie **names** your browser sends. Cookie values are never shown.
 - `npm run demo` serves [`demo-origin/`](demo-origin/) on port **4000** for cross-origin and CSRF exercises in Lab 3.
 - The session cookie uses `secure: false` because the lab runs on plain `http://localhost`. A production site must use HTTPS and `secure: true`. Lab 3 also covers `HttpOnly` and `SameSite`.
-- Lab 4: login returns a JWT in `token` for `Authorization: Bearer` demos; the React UI still uses the session cookie. Fix verification, expiry, and hashing as described in [`LAB4.md`](LAB4.md).
+- Lab 4: login returns a JWT; the client stores it in `localStorage` (`shoplab.jwt`) and sends `Authorization: Bearer` so a server restart does not force re-login. XSS can steal that token (see Lab 3). Fix verification, expiry, and hashing as described in [`LAB4.md`](LAB4.md).
 - The server listens on `127.0.0.1` only, so other computers on your network cannot reach it.
 - Settings can be changed in a `.env` file; see `.env.example` (`SESSION_SECRET`, `JWT_SECRET` after Lab 4).
 
