@@ -55,9 +55,9 @@ function ProductReviews({ productId, user }) {
                     <strong>{review.authorName}</strong>
                     <span className="muted">{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
-                  {/* <div>
-                    {review.body}
-                  </div> */}
+                  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(review.body, { 
+                    ALLOWED_TAGS: ["a", "b", "strong", "span", "p", "img"]
+                  }) }} />
                 </li>
               ))}
             </ul>
