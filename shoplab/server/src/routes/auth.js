@@ -2,12 +2,22 @@ const crypto = require('node:crypto');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcryptjs");
+const rateLimit = require('express-rate-limit')
 const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
 
 const router = express.Router();
+
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	limit: 5, 
+	standardHeaders: 'draft-8',
+  legacyHeaders: false,
+	ipv6Subnet: 56,
+  message: { error: "too many access requests" }
+})
 
 // Lab 4 teaching build: secret lives in source (students move this to env).
 const JWT_SECRET = 'shoplab-jwt-secret';
@@ -20,13 +30,13 @@ function bcryptHash(password) {
   return bcrypt.hash(password, 10);
 }
 
-router.post('/login', (req, res, next) => {
+router.post('/login', limiter, (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid email or password' });
   }
 
-  const { email, password } = parsed.data;
+  const { email, password } = parsed.data
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
   // Lab 4 teaching build: different messages reveal whether the account exists.
