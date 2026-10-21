@@ -1,14 +1,13 @@
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
+const bcrypt = require('bcryptjs');
 
 const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'shoplab.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-// Lab 4 teaching build: fast unsalted SHA-256 (not suitable for real passwords).
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
+  return bcrypt.hashSync(String(password), 10);
 }
 
 const db = new DatabaseSync(dbPath);
@@ -77,6 +76,19 @@ if (!userColumns.includes('password')) {
   db.exec('ALTER TABLE users ADD COLUMN password TEXT');
   const setPassword = db.prepare('UPDATE users SET password = ? WHERE email = ?');
   for (const [email, , password] of users) setPassword.run(password, email);
+}
+
+const legacyUsers = db
+  .prepare('SELECT id, password, password_hash FROM users WHERE password IS NOT NULL')
+  .all();
+const updatePassword = db.prepare(
+  'UPDATE users SET password_hash = ?, password = NULL WHERE id = ?',
+);
+for (const user of legacyUsers) {
+  const passwordHash = String(user.password_hash || '').startsWith('$2')
+    ? user.password_hash
+    : bcrypt.hashSync(String(user.password), 10);
+  updatePassword.run(passwordHash, user.id);
 }
 
 function seed() {

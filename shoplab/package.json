@@ -12,9 +12,15 @@
     "start": "npm run build --prefix client && npm start --prefix server",
     "demo": "node demo-origin/server.js",
     "reset-db": "npm run reset-db --prefix server",
+    "reset-passwords": "npm run reset-passwords --prefix server",
     "test": "npm test --prefix server"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express-rate-limit": "^8.7.1"
   }
 }

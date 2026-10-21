@@ -5,7 +5,7 @@ function requireLogin(req, res, next) {
   if (header && header.startsWith('Bearer ')) {
     const token = header.slice('Bearer '.length).trim();
     // Lab 4 teaching build: decode without verifying signature or expiry.
-    const payload = jwt.decode(token);
+    const payload = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
     if (payload && payload.userId) {
       req.session.userId = payload.userId;
       return next();

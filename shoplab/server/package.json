@@ -11,6 +11,7 @@
     "start": "node --disable-warning=ExperimentalWarning --env-file-if-exists=../.env src/index.js",
     "dev": "node --disable-warning=ExperimentalWarning --env-file-if-exists=../.env --watch src/index.js",
     "reset-db": "node -e \"require('fs').rmSync('data', { recursive: true, force: true }); console.log('Database removed. It will be recreated on the next start.')\"",
+    "reset-passwords": "node --disable-warning=ExperimentalWarning --env-file-if-exists=../.env scripts/reset-passwords.js",
     "test": "node --disable-warning=ExperimentalWarning --test"
   },
   "dependencies": {

@@ -38,6 +38,14 @@ npm run reset-db
 
 This deletes the database file (`server/data/shoplab.db`). The next start creates it again with the original users and products.
 
+### Reset account passwords
+
+```bash
+npm run reset-passwords
+```
+
+This resets the lab accounts to the passwords listed below using bcrypt, without deleting shop data.
+
 ### Run the tests
 
 ```bash
