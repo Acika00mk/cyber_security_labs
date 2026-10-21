@@ -5,17 +5,31 @@ const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
+const bcrypt = require('bcryptjs')
+
+const rateLimit = require('express-rate-limit');
+
+
 
 const router = express.Router();
 
-// Lab 4 teaching build: secret lives in source (students move this to env).
-const JWT_SECRET = 'shoplab-jwt-secret';
 
 function sha256Hex(password) {
   return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
 }
 
-router.post('/login', (req, res, next) => {
+function bcryptHash(password){
+  return bcrypt.hashSync(password, 10);
+}
+
+const loginLimiter = rateLimit({
+  windowMs: 60* 15* 1000,
+  limit: 5,
+  message: {error:'Too many attempts, please try again later'},
+})
+
+
+router.post('/login', loginLimiter , (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid email or password' });
@@ -26,14 +40,14 @@ router.post('/login', (req, res, next) => {
 
   // Lab 4 teaching build: different messages reveal whether the account exists.
   if (!user) {
-    return res.status(401).json({ error: 'No account with that email' });
+    return res.status(401).json({ error:'Invalid data' });
   }
-  if (sha256Hex(password) !== user.password_hash) {
-    return res.status(401).json({ error: 'Incorrect password' });
+  if (!bcrypt.compareSync(password, user.password_hash)){
+    return res.status(401).json({ error: 'Invalid data'});
   }
 
   // Lab 4 teaching build: JWT has no exp claim.
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET);
+  const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, {expiresIn: '1h'});
 
   req.session.regenerate((err) => {
     if (err) return next(err);
