@@ -1,24 +1,40 @@
 const crypto = require('node:crypto');
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit'); // 1. Увоз на express-rate-limit
 const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
+const bycrypt = require('bcryptjs');
 
 const router = express.Router();
 
 // Lab 4 teaching build: secret lives in source (students move this to env).
 const JWT_SECRET = 'shoplab-jwt-secret';
 
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
+  message: { error: 'Too many login attempts, please try again after 15 minutes.' },
+  standardHeaders: true, 
+  legacyHeaders: false, 
+});
+
 function sha256Hex(password) {
   return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
 }
 
-router.post('/login', (req, res, next) => {
+function bcryptHash(password) {
+  return bycrypt.hashSync(password, 10);
+}
+
+
+router.post('/login', loginLimiter, (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Invalid email or password' });
+    return res.status(400).json({ error: 'Something is wrong' });
   }
 
   const { email, password } = parsed.data;
@@ -26,14 +42,14 @@ router.post('/login', (req, res, next) => {
 
   // Lab 4 teaching build: different messages reveal whether the account exists.
   if (!user) {
-    return res.status(401).json({ error: 'No account with that email' });
+    return res.status(401).json({ error: 'Invalid ' });
   }
-  if (sha256Hex(password) !== user.password_hash) {
-    return res.status(401).json({ error: 'Incorrect password' });
+  if (!bycrypt.compareSync(password, user.password_hash)) {
+    return res.status(401).json({ error: 'Invalid' });
   }
 
   // Lab 4 teaching build: JWT has no exp claim.
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET);
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '15m' });
 
   req.session.regenerate((err) => {
     if (err) return next(err);
