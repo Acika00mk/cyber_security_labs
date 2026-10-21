@@ -5,6 +5,14 @@ const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
+const bcrypt = require('bcryptjs')
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, //15min
+  limit: 5,
+  message: {error: "Too many requests"}
+})
 
 const router = express.Router();
 
@@ -15,10 +23,16 @@ function sha256Hex(password) {
   return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
 }
 
-router.post('/login', (req, res, next) => {
+function bycriptHash(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.hashSync(password, salt);
+  return hash;
+}
+
+router.post('/login', limiter, (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Invalid email or password' });
+    return res.status(400).json({ error: 'something went wrong' });
   }
 
   const { email, password } = parsed.data;
@@ -26,10 +40,11 @@ router.post('/login', (req, res, next) => {
 
   // Lab 4 teaching build: different messages reveal whether the account exists.
   if (!user) {
-    return res.status(401).json({ error: 'No account with that email' });
+    return res.status(401).json({ error: 'something went wrong' });
   }
+
   if (sha256Hex(password) !== user.password_hash) {
-    return res.status(401).json({ error: 'Incorrect password' });
+    return res.status(401).json({ error: 'something went wrong' });
   }
 
   // Lab 4 teaching build: JWT has no exp claim.
