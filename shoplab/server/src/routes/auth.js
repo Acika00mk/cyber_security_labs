@@ -5,20 +5,36 @@ const { db } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 
 const router = express.Router();
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5,               // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests from this IP, please try again later.' } ,
+  standardHeaders: 'draft-8', // Returns standard RateLimit-* headers
+  legacyHeaders: false,     // Disables X-RateLimit-* headers
+});
+
 // Lab 4 teaching build: secret lives in source (students move this to env).
-const JWT_SECRET = 'shoplab-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function sha256Hex(password) {
   return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
 }
 
-router.post('/login', (req, res, next) => {
+function bcryptHash(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = bcrypt.hashSync(password, salt);
+  return hash;
+}
+
+router.post('/login', limiter, (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Invalid email or password' });
+    return res.status(400).json({ error: 'Invalid data' });
   }
 
   const { email, password } = parsed.data;
@@ -26,14 +42,17 @@ router.post('/login', (req, res, next) => {
 
   // Lab 4 teaching build: different messages reveal whether the account exists.
   if (!user) {
-    return res.status(401).json({ error: 'No account with that email' });
+    return res.status(401).json({ error: 'Invalid data' });
   }
-  if (sha256Hex(password) !== user.password_hash) {
-    return res.status(401).json({ error: 'Incorrect password' });
+  console.log(bcrypt.compareSync(password, user.password_hash));
+  console.log(bcrypt.compare(password, user.password_hash));
+
+  if (!bcrypt.compareSync(password, user.password_hash)) {
+    return res.status(401).json({ error: 'Invalid data' });
   }
 
   // Lab 4 teaching build: JWT has no exp claim.
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET);
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {expiresIn: '1h'});
 
   req.session.regenerate((err) => {
     if (err) return next(err);
