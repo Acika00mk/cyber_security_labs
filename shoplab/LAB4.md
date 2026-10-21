@@ -77,7 +77,6 @@ node -e "console.log(require('crypto').createHash('sha256').update('alice123').d
 ### A3 – Write-up
 
 In your notes, explain briefly:
-
 - Why **MD5, SHA-1, and SHA-256** are the wrong choice for password storage (fast, GPU-friendly, no work factor; unsalted hashes collide across users with the same password).
 - What **salt** and **work factor** give you with bcrypt or argon2.
 
