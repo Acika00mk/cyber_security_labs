@@ -16,5 +16,11 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "argon2": "^0.45.1",
+    "bcrypt": "^6.0.0",
+    "express-rate": "^0.0.1",
+    "limiter": "^4.1.0"
   }
 }

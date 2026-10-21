@@ -1,14 +1,13 @@
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const bcrypt = require('bcryptjs');
 const { DatabaseSync } = require('node:sqlite');
 
 const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'shoplab.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-// Lab 4 teaching build: fast unsalted SHA-256 (not suitable for real passwords).
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
+  return bcrypt.hashSync(String(password), 10);
 }
 
 const db = new DatabaseSync(dbPath);
