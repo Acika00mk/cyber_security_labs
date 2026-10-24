@@ -12,6 +12,7 @@ Lab material for the web security course. Each lab uses a small application that
 | Week 2 – Injection (SQL) | [`shoplab/LAB2.md`](shoplab/LAB2.md) | String-built SQL in catalog, login, and order filter; fix with parameters and schema validation |
 | Week 3 – XSS, CSRF, cookies, CSP | [`shoplab/LAB3.md`](shoplab/LAB3.md) | Stored XSS in reviews, CSRF on reorder, cookie flags, Content Security Policy |
 | Week 4 – Authentication | [`shoplab/LAB4.md`](shoplab/LAB4.md) | Weak password hashes, login enumeration, JWT mistakes, rate limiting; optional extensions |
+| Week 5 – Authorization and access control | [`shoplab/LAB5.md`](shoplab/LAB5.md) | IDOR on orders, missing admin checks, mass assignment; optional extensions |
 
 ## Quick start (ShopLab)
 
@@ -29,6 +30,7 @@ Open **http://localhost:3000** and log in with one of the lab accounts:
 |---|---|
 | alice@shoplab.test | alice123 |
 | bob@shoplab.test | bob123 |
+| admin@shoplab.test | admin123 (Lab 5 staff account) |
 
 Lab coupons for the Cart page: `WELCOME10` (€10.00 off) and `SPRING50` (€50.00 off).
 

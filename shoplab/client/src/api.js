@@ -72,7 +72,7 @@ export const api = {
     });
     setToken(data.token);
     await refreshCsrf();
-    return { id: data.id, name: data.name, email: data.email };
+    return { id: data.id, name: data.name, email: data.email, role: data.role || 'customer' };
   },
   logout: async () => {
     csrfToken = null;
@@ -104,6 +104,10 @@ export const api = {
     const query = params.toString();
     return request(`/orders${query ? `?${query}` : ''}`);
   },
+  order: (orderId) => request(`/orders/${orderId}`),
+  adminUsers: () => request('/admin/users'),
+  updateProfile: (profile) =>
+    request('/auth/me', { method: 'PATCH', body: JSON.stringify(profile) }),
   placeOrder: (order) => request('/orders', { method: 'POST', body: JSON.stringify(order) }),
   reorder: (productId, quantity) =>
     request('/orders/reorder', { method: 'POST', body: JSON.stringify({ productId, quantity }) }),

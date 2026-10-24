@@ -88,3 +88,18 @@ test('logged-in user can post a product review', async () => {
   assert.strictEqual(res.status, 201);
   assert.ok(res.body.id);
 });
+
+test('GET /api/orders/1001 returns Alice demo order', async () => {
+  const res = await agent.get('/api/orders/1001');
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.id, 1001);
+  assert.ok(res.body.items.length >= 1);
+});
+
+test('admin can log in', async () => {
+  const res = await request(app)
+    .post('/api/auth/login')
+    .send({ email: 'admin@shoplab.test', password: 'admin123' });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.role, 'admin');
+});

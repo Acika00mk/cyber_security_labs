@@ -10,6 +10,8 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const reviewRoutes = require('./routes/reviews');
 const debugRoutes = require('./routes/debug');
+const adminRoutes = require('./routes/admin');
+const requireLogin = require('./middleware/requireLogin');
 
 function createApp() {
   const app = express();
@@ -44,6 +46,8 @@ function createApp() {
   app.use('/api/products/:productId/reviews', reviewRoutes);
   app.use('/api/products', productRoutes);
   app.use('/api/orders', orderRoutes);
+  // Lab 5 teaching build: login required but no admin role check on this router.
+  app.use('/api/admin', requireLogin, adminRoutes);
   app.use('/api/debug', debugRoutes);
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 

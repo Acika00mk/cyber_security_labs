@@ -43,7 +43,13 @@ router.post('/login', loginLimiter, (req, res, next) => {
     if (err) return next(err);
     req.session.userId = user.id;
     issueCsrfToken(req);
-    res.json({ id: user.id, name: user.name, email: user.email, token });
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role || 'customer',
+      token,
+    });
   });
 });
 
@@ -62,9 +68,27 @@ router.post('/logout', (req, res) => {
 });
 
 router.get('/me', requireLogin, (req, res) => {
-  const user = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(401).json({ error: 'Please log in' });
-  res.json({ id: user.id, name: user.name, email: user.email });
+  res.json({ id: user.id, name: user.name, email: user.email, role: user.role || 'customer' });
+});
+
+// Lab 5 teaching build: whole request body can change role and email (mass assignment).
+router.patch('/me', requireLogin, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  if (!user) return res.status(401).json({ error: 'Please log in' });
+
+  const body = req.body && typeof req.body === 'object' ? req.body : {};
+  const name = typeof body.name === 'string' ? body.name.trim() : user.name;
+  const email = typeof body.email === 'string' ? body.email.trim() : user.email;
+  const role = typeof body.role === 'string' ? body.role.trim() : user.role;
+
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Invalid profile' });
+  }
+
+  db.prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?').run(name, email, role, user.id);
+  res.json({ id: user.id, name, email, role });
 });
 
 module.exports = router;

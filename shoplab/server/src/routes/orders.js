@@ -2,7 +2,7 @@ const express = require('express');
 const { db, transaction, findProduct, findCoupon } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { requireCsrf } = require('../middleware/csrf');
-const { orderListQuerySchema, reorderBodySchema } = require('../validation/catalog');
+const { orderListQuerySchema, reorderBodySchema, orderIdParamSchema } = require('../validation/catalog');
 
 const router = express.Router();
 
@@ -15,6 +15,29 @@ function isPlainObject(value) {
 
 function hasOnlyKeys(object, allowed) {
   return Object.keys(object).every((key) => allowed.includes(key));
+}
+
+const itemsQuery = db.prepare(`
+  SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
+  FROM order_items oi JOIN products p ON p.id = oi.product_id
+  WHERE oi.order_id = ?
+`);
+
+function orderToJson(order) {
+  return {
+    id: order.id,
+    createdAt: order.created_at,
+    status: order.status,
+    total: order.total_cents / 100,
+    couponCode: order.coupon_code,
+    discount: (order.discount_cents || 0) / 100,
+    items: itemsQuery.all(order.id).map((item) => ({
+      productId: item.product_id,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unit_price_cents / 100,
+    })),
+  };
 }
 
 function createPaidOrder(userId, lines, couponCode) {
@@ -80,28 +103,22 @@ router.get('/', requireLogin, (req, res) => {
   sql += ' ORDER BY id DESC';
 
   const orders = db.prepare(sql).all(...params);
-  const itemsQuery = db.prepare(`
-    SELECT oi.product_id, p.name, oi.quantity, oi.unit_price_cents
-    FROM order_items oi JOIN products p ON p.id = oi.product_id
-    WHERE oi.order_id = ?
-  `);
+  res.json(orders.map(orderToJson));
+});
 
-  res.json(
-    orders.map((order) => ({
-      id: order.id,
-      createdAt: order.created_at,
-      status: order.status,
-      total: order.total_cents / 100,
-      couponCode: order.coupon_code,
-      discount: (order.discount_cents || 0) / 100,
-      items: itemsQuery.all(order.id).map((item) => ({
-        productId: item.product_id,
-        name: item.name,
-        quantity: item.quantity,
-        unitPrice: item.unit_price_cents / 100,
-      })),
-    }))
-  );
+// Lab 5 teaching build: loads by order id only — no owner filter (IDOR).
+router.get('/:id', requireLogin, (req, res) => {
+  const parsed = orderIdParamSchema.safeParse(req.params.id);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  if (!order) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+
+  res.json(orderToJson(order));
 });
 
 // Quick reorder from order history (form-friendly for the lecture demo).

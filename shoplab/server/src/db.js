@@ -24,7 +24,8 @@ db.exec(`
     email TEXT UNIQUE,
     name TEXT,
     password_hash TEXT,
-    password TEXT
+    password TEXT,
+    role TEXT NOT NULL DEFAULT 'customer'
   );
   CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY,
@@ -71,17 +72,49 @@ if (!orderColumns.includes('discount_cents')) {
   db.exec('ALTER TABLE orders ADD COLUMN discount_cents INTEGER DEFAULT 0');
 }
 
-const users = [
-  ['alice@shoplab.test', 'Alice', 'alice123'],
-  ['bob@shoplab.test', 'Bob', 'bob123'],
+const customerUsers = [
+  ['alice@shoplab.test', 'Alice', 'alice123', 'customer'],
+  ['bob@shoplab.test', 'Bob', 'bob123', 'customer'],
 ];
+
+const adminUser = ['admin@shoplab.test', 'Admin', 'admin123', 'admin'];
 
 // Databases created before the login rewrite are missing the password column.
 const userColumns = db.prepare('PRAGMA table_info(users)').all().map((column) => column.name);
 if (!userColumns.includes('password')) {
   db.exec('ALTER TABLE users ADD COLUMN password TEXT');
   const setPassword = db.prepare('UPDATE users SET password = ? WHERE email = ?');
-  for (const [email, , password] of users) setPassword.run(password, email);
+  for (const [email, , password] of customerUsers) setPassword.run(password, email);
+}
+if (!userColumns.includes('role')) {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'customer'");
+}
+
+function seedDemoOrders() {
+  if (db.prepare('SELECT id FROM orders WHERE id = 1001').get()) {
+    return;
+  }
+
+  const alice = db.prepare('SELECT id FROM users WHERE email = ?').get('alice@shoplab.test');
+  const bob = db.prepare('SELECT id FROM users WHERE email = ?').get('bob@shoplab.test');
+  if (!alice || !bob) return;
+
+  const createdAt = new Date('2025-10-01T12:00:00.000Z').toISOString();
+  const insertOrder = db.prepare(
+    `INSERT INTO orders (id, user_id, total_cents, status, created_at, coupon_code, discount_cents)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  );
+  const insertItem = db.prepare(
+    'INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)'
+  );
+
+  insertOrder.run(1001, alice.id, 39900, 'paid', createdAt, null, 0);
+  insertItem.run(1001, 3, 1, 39900);
+
+  insertOrder.run(1002, bob.id, 3900, 'paid', createdAt, null, 0);
+  insertItem.run(1002, 4, 1, 3900);
+
+  db.prepare("UPDATE sqlite_sequence SET seq = MAX(seq, 1002) WHERE name = 'orders'").run();
 }
 
 function seed() {
@@ -93,21 +126,40 @@ function seed() {
     [5, 'Laptop Stand', 'Aluminium, adjustable height, fits 11 to 17 inch laptops.', 4500, '/images/stand.svg'],
   ];
 
-  const insertUser = db.prepare('INSERT INTO users (email, name, password_hash, password) VALUES (?, ?, ?, ?)');
-  for (const [email, name, password] of users) {
-    insertUser.run(email, name, hashPassword(password), null);
+  const insertUser = db.prepare(
+    'INSERT INTO users (email, name, password_hash, password, role) VALUES (?, ?, ?, ?, ?)'
+  );
+  for (const [email, name, password, role] of customerUsers) {
+    insertUser.run(email, name, hashPassword(password), null, role);
   }
+  const [email, name, password, role] = adminUser;
+  insertUser.run(email, name, hashPassword(password), null, role);
+
   const insertProduct = db.prepare(
     'INSERT INTO products (id, name, description, price_cents, image) VALUES (?, ?, ?, ?, ?)'
   );
   for (const product of products) insertProduct.run(...product);
 
   db.prepare("INSERT INTO sqlite_sequence (name, seq) VALUES ('orders', 1000)").run();
+  seedDemoOrders();
 }
 
 if (db.prepare('SELECT COUNT(*) AS n FROM users').get().n === 0) {
   seed();
 }
+
+if (!db.prepare('SELECT id FROM users WHERE email = ?').get('admin@shoplab.test')) {
+  const [email, name, password, role] = adminUser;
+  db.prepare('INSERT INTO users (email, name, password_hash, password, role) VALUES (?, ?, ?, ?, ?)').run(
+    email,
+    name,
+    hashPassword(password),
+    null,
+    role
+  );
+}
+
+seedDemoOrders();
 
 if (db.prepare('SELECT COUNT(*) AS n FROM coupons').get().n === 0) {
   const insertCoupon = db.prepare('INSERT INTO coupons (code, discount_cents, active) VALUES (?, ?, 1)');

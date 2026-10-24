@@ -36,6 +36,7 @@ export default function Login({ onLogin }) {
         <ul>
           <li>alice@shoplab.test / alice123</li>
           <li>bob@shoplab.test / bob123</li>
+          <li>admin@shoplab.test / admin123 (staff)</li>
         </ul>
       </div>
     </section>
