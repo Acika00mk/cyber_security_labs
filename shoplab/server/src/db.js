@@ -1,14 +1,19 @@
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const bcrypt = require('bcryptjs');
 const { DatabaseSync } = require('node:sqlite');
 
 const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'shoplab.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-// Lab 4 teaching build: fast unsalted SHA-256 (not suitable for real passwords).
+const BCRYPT_ROUNDS = 10;
+
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
+  return bcrypt.hashSync(String(password), BCRYPT_ROUNDS);
+}
+
+function verifyPassword(password, passwordHash) {
+  return bcrypt.compareSync(String(password), passwordHash);
 }
 
 const db = new DatabaseSync(dbPath);
@@ -147,4 +152,4 @@ function findCoupon(code) {
     .get(String(code).trim().toUpperCase());
 }
 
-module.exports = { db, transaction, findProduct, findCoupon };
+module.exports = { db, transaction, findProduct, findCoupon, hashPassword, verifyPassword };

@@ -6,6 +6,8 @@ const path = require('node:path');
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shoplab-test-'));
 process.env.DB_PATH = path.join(tmpDir, 'test.db');
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'smoke-test-jwt-secret';
+process.env.NODE_ENV = 'test';
 
 const request = require('supertest');
 const { createApp } = require('../src/app');
