@@ -4,6 +4,8 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 
+require('dotenv').config();
+
 const requestLog = require('./middleware/requestLog');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
