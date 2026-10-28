@@ -29,6 +29,7 @@ function orderToJson(order) {
     createdAt: order.created_at,
     status: order.status,
     total: order.total_cents / 100,
+    userId: order.user_id,
     couponCode: order.coupon_code,
     discount: (order.discount_cents || 0) / 100,
     items: itemsQuery.all(order.id).map((item) => ({
@@ -113,10 +114,19 @@ router.get('/:id', requireLogin, (req, res) => {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
-  if (!order) {
-    return res.status(404).json({ error: 'Order not found' });
+  const role = db.prepare('SELECT role FROM users WHERE id = ?').get(req.session.userId);
+  let order;
+  
+  if (role && role.role === 'admin') {
+    order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  } else {
+    order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(parsed.data, req.session.userId);
+ 
   }
+
+   if (!order) {
+    return res.status(404).json({ error: 'Order not found' });
+   }
 
   res.json(orderToJson(order));
 });
