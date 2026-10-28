@@ -5,7 +5,7 @@ const { db, verifyPassword } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
-
+const requireAdmin = require('../middleware/requireAdmin');
 const router = express.Router();
 
 function jwtSecret() {
@@ -74,7 +74,7 @@ router.get('/me', requireLogin, (req, res) => {
 });
 
 // Lab 5 teaching build: whole request body can change role and email (mass assignment).
-router.patch('/me', requireLogin, (req, res) => {
+router.patch('/me',  requireAdmin ,requireLogin, (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
   if (!user) return res.status(401).json({ error: 'Please log in' });
 
@@ -92,3 +92,4 @@ router.patch('/me', requireLogin, (req, res) => {
 });
 
 module.exports = router;
+
