@@ -113,12 +113,22 @@ router.get('/:id', requireLogin, (req, res) => {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
-  if (!order) {
+  const role = db.prepare('SELECT role FROM users WHERE id = ?').get(req.session.userId);
+
+  if (role == 'admin'){
+
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+  
+    res.json(orderToJson(order));
+
+  }else{
     return res.status(404).json({ error: 'Order not found' });
+
   }
 
-  res.json(orderToJson(order));
 });
 
 // Quick reorder from order history (form-friendly for the lecture demo).
