@@ -106,14 +106,25 @@ router.get('/', requireLogin, (req, res) => {
   res.json(orders.map(orderToJson));
 });
 
-// Lab 5 teaching build: loads by order id only — no owner filter (IDOR).
 router.get('/:id', requireLogin, (req, res) => {
   const parsed = orderIdParamSchema.safeParse(req.params.id);
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  const user = db.prepare('SELECT role FROM users WHERE id = ?').get(req.session.userId);
+  if (!user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  let order;
+
+  if (user.role === 'admin') {
+    order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  } else {
+    order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(parsed.data, req.session.userId);
+  }
+
   if (!order) {
     return res.status(404).json({ error: 'Order not found' });
   }
