@@ -52,6 +52,9 @@ npm test
 | Week 3 – XSS, CSRF, cookies, CSP | [`LAB3.md`](LAB3.md) |
 | Week 4 – Authentication (hashes, JWT, rate limiting) | [`LAB4.md`](LAB4.md) |
 | Week 4 – Optional extensions | [`LAB4-EXTENSIONS.md`](LAB4-EXTENSIONS.md) |
+| Week 5 – Authorization (IDOR, roles, mass assignment) | [`LAB5.md`](LAB5.md) |
+| Week 5 – Optional extensions | [`LAB5-EXTENSIONS.md`](LAB5-EXTENSIONS.md) |
+| Week 5 – Lecture slide outline | [`LAB5-SLIDES.md`](LAB5-SLIDES.md) |
 
 ## Lab accounts
 
@@ -59,6 +62,7 @@ npm test
 |---|---|
 | alice@shoplab.test | alice123 |
 | bob@shoplab.test | bob123 |
+| admin@shoplab.test | admin123 |
 
 ## Lab coupons
 
@@ -76,12 +80,12 @@ shoplab/
   server/src/app.js          Express app (sessions, routes, serves the built client)
   server/src/index.js        starts the server on 127.0.0.1:3000
   server/src/db.js           SQLite schema, seed data, small helpers
-  server/src/routes/         auth, products, orders, debug
+  server/src/routes/         auth, products, orders, admin, debug
   server/src/middleware/     requireLogin (session + Bearer JWT), requestLog, csrf
   server/test/               smoke tests (npm test)
   client/src/api.js          every fetch() call to the API
   client/src/cart.js         cart logic (stored in localStorage)
-  client/src/pages/          Login, Products, Cart, Orders
+  client/src/pages/          Login, Products, Cart, Orders, Profile, Admin
   demo-origin/               a second "website" on port 4000, used in the lecture
 ```
 
@@ -91,6 +95,7 @@ shoplab/
 - `npm run demo` serves [`demo-origin/`](demo-origin/) on port **4000** for cross-origin and CSRF exercises in Lab 3.
 - The session cookie uses `secure: false` because the lab runs on plain `http://localhost`. A production site must use HTTPS and `secure: true`. Lab 3 also covers `HttpOnly` and `SameSite`.
 - Lab 4: login returns a JWT; the client stores it in `localStorage` (`shoplab.jwt`) and sends `Authorization: Bearer` so a server restart does not force re-login. XSS can steal that token (see Lab 3). Fix verification, expiry, and hashing as described in [`LAB4.md`](LAB4.md).
+- Lab 5: the **Admin** nav link is shown only to `admin@shoplab.test`. That is **not** access control — enforce roles on `/api/admin` and fix IDOR / mass assignment as in [`LAB5.md`](LAB5.md). After `npm run reset-db`, demo orders **#1001** (Alice) and **#1002** (Bob) are seeded for IDOR exercises.
 - The server listens on `127.0.0.1` only, so other computers on your network cannot reach it.
 - Settings can be changed in a `.env` file; see `.env.example` (`SESSION_SECRET`, `JWT_SECRET` after Lab 4).
 

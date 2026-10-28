@@ -6,6 +6,8 @@ const path = require('node:path');
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shoplab-test-'));
 process.env.DB_PATH = path.join(tmpDir, 'test.db');
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'smoke-test-jwt-secret';
+process.env.NODE_ENV = 'test';
 
 const request = require('supertest');
 const { createApp } = require('../src/app');
@@ -85,4 +87,19 @@ test('logged-in user can post a product review', async () => {
   const res = await agent.post('/api/products/3/reviews').send({ body: 'Smoke test review' });
   assert.strictEqual(res.status, 201);
   assert.ok(res.body.id);
+});
+
+test('GET /api/orders/1001 returns Alice demo order', async () => {
+  const res = await agent.get('/api/orders/1001');
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.id, 1001);
+  assert.ok(res.body.items.length >= 1);
+});
+
+test('admin can log in', async () => {
+  const res = await request(app)
+    .post('/api/auth/login')
+    .send({ email: 'admin@shoplab.test', password: 'admin123' });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.role, 'admin');
 });

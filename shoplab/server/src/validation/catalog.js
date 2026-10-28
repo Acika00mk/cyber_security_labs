@@ -32,6 +32,12 @@ const reorderBodySchema = z.object({
   quantity: z.coerce.number().int().min(1).max(10),
 });
 
+const orderIdParamSchema = z.coerce.number().int().positive();
+
+const profilePatchSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+});
+
 module.exports = {
   productListQuerySchema,
   productIdParamSchema,
@@ -40,4 +46,6 @@ module.exports = {
   orderListQuerySchema,
   reviewBodySchema,
   reorderBodySchema,
+  orderIdParamSchema,
+  profilePatchSchema,
 };
