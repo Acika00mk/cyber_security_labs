@@ -93,7 +93,7 @@ router.get('/', requireLogin, (req, res) => {
   }
 
   const { product } = parsed.data;
-  let sql = 'SELECT * FROM orders WHERE user_id = ?';
+  let sql = 'SELECT * FROM orders WHERE id = ? and user_id = ?';
   const params = [req.session.userId];
   if (product) {
     sql +=
