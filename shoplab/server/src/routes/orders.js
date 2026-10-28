@@ -113,7 +113,7 @@ router.get('/:id', requireLogin, (req, res) => {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(parsed.data, req.session.userId);
   if (!order) {
     return res.status(404).json({ error: 'Order not found' });
   }

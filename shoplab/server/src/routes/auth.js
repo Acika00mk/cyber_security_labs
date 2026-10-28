@@ -87,8 +87,8 @@ router.patch('/me', requireLogin, (req, res) => {
     return res.status(400).json({ error: 'Invalid profile' });
   }
 
-  db.prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?').run(name, email, role, user.id);
-  res.json({ id: user.id, name, email, role });
+  db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, user.id);
+  res.json({ id: user.id, name });
 });
 
 module.exports = router;
