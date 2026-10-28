@@ -1,8 +1,12 @@
-const express = require('express');
-const { db, transaction, findProduct, findCoupon } = require('../db');
-const requireLogin = require('../middleware/requireLogin');
-const { requireCsrf } = require('../middleware/csrf');
-const { orderListQuerySchema, reorderBodySchema, orderIdParamSchema } = require('../validation/catalog');
+const express = require("express");
+const { db, transaction, findProduct, findCoupon } = require("../db");
+const requireLogin = require("../middleware/requireLogin");
+const { requireCsrf } = require("../middleware/csrf");
+const {
+  orderListQuerySchema,
+  reorderBodySchema,
+  orderIdParamSchema,
+} = require("../validation/catalog");
 
 const router = express.Router();
 
@@ -10,7 +14,7 @@ const MAX_ITEMS = 20;
 const MAX_QUANTITY = 10;
 
 function isPlainObject(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function hasOnlyKeys(object, allowed) {
@@ -26,6 +30,7 @@ const itemsQuery = db.prepare(`
 function orderToJson(order) {
   return {
     id: order.id,
+    user: order.user_id,
     createdAt: order.created_at,
     status: order.status,
     total: order.total_cents / 100,
@@ -43,37 +48,47 @@ function orderToJson(order) {
 function createPaidOrder(userId, lines, couponCode) {
   let coupon = null;
   if (couponCode !== undefined && couponCode !== null) {
-    if (typeof couponCode !== 'string') {
-      return { error: 'Invalid order', status: 400 };
+    if (typeof couponCode !== "string") {
+      return { error: "Invalid order", status: 400 };
     }
     coupon = findCoupon(couponCode);
     if (!coupon) {
-      return { error: 'Invalid coupon', status: 400 };
+      return { error: "Invalid coupon", status: 400 };
     }
   }
 
-  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
-  const discountCents = coupon ? Math.min(coupon.discount_cents, subtotalCents) : 0;
+  const subtotalCents = lines.reduce(
+    (sum, line) => sum + line.unitPriceCents * line.quantity,
+    0,
+  );
+  const discountCents = coupon
+    ? Math.min(coupon.discount_cents, subtotalCents)
+    : 0;
   const totalCents = subtotalCents - discountCents;
   const orderId = transaction(() => {
     const order = db
       .prepare(
         `INSERT INTO orders (user_id, total_cents, status, created_at, coupon_code, discount_cents)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .run(
         userId,
         totalCents,
-        'paid',
+        "paid",
         new Date().toISOString(),
         coupon ? coupon.code : null,
-        discountCents
+        discountCents,
       );
     const insertItem = db.prepare(
-      'INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)'
+      "INSERT INTO order_items (order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)",
     );
     for (const line of lines) {
-      insertItem.run(order.lastInsertRowid, line.productId, line.quantity, line.unitPriceCents);
+      insertItem.run(
+        order.lastInsertRowid,
+        line.productId,
+        line.quantity,
+        line.unitPriceCents,
+      );
     }
     return order.lastInsertRowid;
   });
@@ -82,56 +97,72 @@ function createPaidOrder(userId, lines, couponCode) {
     orderId,
     total: totalCents / 100,
     discount: discountCents / 100,
-    status: 'paid',
+    status: "paid",
   };
 }
 
-router.get('/', requireLogin, (req, res) => {
+router.get("/", requireLogin, (req, res) => {
   const parsed = orderListQuerySchema.safeParse(req.query);
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Invalid request' });
+    return res.status(400).json({ error: "Invalid request" });
   }
 
   const { product } = parsed.data;
-  let sql = 'SELECT * FROM orders WHERE user_id = ?';
+  let sql = "SELECT * FROM orders WHERE user_id = ?";
   const params = [req.session.userId];
   if (product) {
     sql +=
-      ' AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE ?)';
+      " AND id IN (SELECT order_id FROM order_items oi JOIN products p ON p.id = oi.product_id WHERE p.name LIKE ?)";
     params.push(`%${product}%`);
   }
-  sql += ' ORDER BY id DESC';
+  sql += " ORDER BY id DESC";
 
   const orders = db.prepare(sql).all(...params);
   res.json(orders.map(orderToJson));
 });
 
 // Lab 5 teaching build: loads by order id only — no owner filter (IDOR).
-router.get('/:id', requireLogin, (req, res) => {
+router.get("/:id", requireLogin, (req, res) => {
   const parsed = orderIdParamSchema.safeParse(req.params.id);
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Invalid request' });
+    return res.status(400).json({ error: "Invalid request" });
   }
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  const role = db
+    .prepare("SELECT role FROM users WHERE id = ?")
+    .get(req.session.userId);
+
+
+  let order;
+
+  if (role.role == "admin") {
+    order = db
+      .prepare("SELECT * FROM orders WHERE id = ?")
+      .get(parsed.data);
+  } else {
+    order = db
+      .prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?")
+      .get(parsed.data, req.session.userId);
+  }
+
   if (!order) {
-    return res.status(404).json({ error: 'Order not found' });
+    return res.status(404).json({ error: "Order not found" });
   }
 
   res.json(orderToJson(order));
 });
 
 // Quick reorder from order history (form-friendly for the lecture demo).
-router.post('/reorder', requireLogin, requireCsrf, (req, res) => {
+router.post("/reorder", requireLogin, requireCsrf, (req, res) => {
   const parsed = reorderBodySchema.safeParse(req.body || {});
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Invalid reorder' });
+    return res.status(400).json({ error: "Invalid reorder" });
   }
 
   const { productId, quantity } = parsed.data;
   const product = findProduct(productId);
   if (!product) {
-    return res.status(400).json({ error: 'Unknown product' });
+    return res.status(400).json({ error: "Unknown product" });
   }
 
   const result = createPaidOrder(req.session.userId, [
@@ -144,25 +175,36 @@ router.post('/reorder', requireLogin, requireCsrf, (req, res) => {
   res.status(201).json(result);
 });
 
-router.post('/', requireLogin, (req, res) => {
-  const invalid = () => res.status(400).json({ error: 'Invalid order' });
+router.post("/", requireLogin, (req, res) => {
+  const invalid = () => res.status(400).json({ error: "Invalid order" });
 
-  if (!isPlainObject(req.body) || !hasOnlyKeys(req.body, ['items', 'couponCode'])) return invalid();
+  if (
+    !isPlainObject(req.body) ||
+    !hasOnlyKeys(req.body, ["items", "couponCode"])
+  )
+    return invalid();
   const { items, couponCode } = req.body;
-  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) return invalid();
+  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS)
+    return invalid();
 
   const lines = [];
   for (const item of items) {
-    if (!isPlainObject(item) || !hasOnlyKeys(item, ['productId', 'quantity'])) return invalid();
+    if (!isPlainObject(item) || !hasOnlyKeys(item, ["productId", "quantity"]))
+      return invalid();
     const { productId, quantity } = item;
-    if (!Number.isInteger(productId) || !Number.isInteger(quantity)) return invalid();
+    if (!Number.isInteger(productId) || !Number.isInteger(quantity))
+      return invalid();
     if (quantity < 1 || quantity > MAX_QUANTITY) return invalid();
 
     const product = findProduct(productId);
     if (!product) {
-      return res.status(400).json({ error: 'Unknown product' });
+      return res.status(400).json({ error: "Unknown product" });
     }
-    lines.push({ productId: product.id, quantity, unitPriceCents: product.price_cents });
+    lines.push({
+      productId: product.id,
+      quantity,
+      unitPriceCents: product.price_cents,
+    });
   }
 
   const result = createPaidOrder(req.session.userId, lines, couponCode);
