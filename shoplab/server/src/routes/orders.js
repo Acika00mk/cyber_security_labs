@@ -111,6 +111,11 @@ router.post('/reorder', requireLogin, requireCsrf, (req, res) => {
     return res.status(400).json({ error: 'Invalid reorder' });
   }
 
+  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(parsed.data.orderId, req.session.userId);
+  if (!order) {
+    return res.status(400).json({ error: 'Unknown order' });
+  }
+
   const { productId, quantity } = parsed.data;
   const product = findProduct(productId);
   if (!product) {
