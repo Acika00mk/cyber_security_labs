@@ -26,6 +26,7 @@ const itemsQuery = db.prepare(`
 function orderToJson(order) {
   return {
     id: order.id,
+    userId: order.user_id,
     createdAt: order.created_at,
     status: order.status,
     total: order.total_cents / 100,
@@ -106,19 +107,20 @@ router.get('/', requireLogin, (req, res) => {
   res.json(orders.map(orderToJson));
 });
 
-// Lab 5 teaching build: loads by order id only — no owner filter (IDOR).
 router.get('/:id', requireLogin, (req, res) => {
   const parsed = orderIdParamSchema.safeParse(req.params.id);
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
+  const order = db
+    .prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?')
+    .get(parsed.data, req.session.userId);
   if (!order) {
     return res.status(404).json({ error: 'Order not found' });
   }
 
-  res.json(orderToJson(order));
+  return res.json(orderToJson(order));
 });
 
 // Quick reorder from order history (form-friendly for the lecture demo).

@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { db, verifyPassword } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
-const { loginBodySchema } = require('../validation/catalog');
+const { loginBodySchema, profilePatchSchema } = require('../validation/catalog');
 
 const router = express.Router();
 
@@ -73,22 +73,18 @@ router.get('/me', requireLogin, (req, res) => {
   res.json({ id: user.id, name: user.name, email: user.email, role: user.role || 'customer' });
 });
 
-// Lab 5 teaching build: whole request body can change role and email (mass assignment).
 router.patch('/me', requireLogin, (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-  if (!user) return res.status(401).json({ error: 'Please log in' });
-
-  const body = req.body && typeof req.body === 'object' ? req.body : {};
-  const name = typeof body.name === 'string' ? body.name.trim() : user.name;
-  const email = typeof body.email === 'string' ? body.email.trim() : user.email;
-  const role = typeof body.role === 'string' ? body.role.trim() : user.role;
-
-  if (!name || !email) {
+  const parsed = profilePatchSchema.safeParse(req.body || {});
+  if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid profile' });
   }
 
-  db.prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?').run(name, email, role, user.id);
-  res.json({ id: user.id, name, email, role });
+  const user = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(req.session.userId);
+  if (!user) return res.status(401).json({ error: 'Please log in' });
+
+  const { name } = parsed.data;
+  db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, user.id);
+  res.json({ id: user.id, name, email: user.email, role: user.role || 'customer' });
 });
 
 module.exports = router;

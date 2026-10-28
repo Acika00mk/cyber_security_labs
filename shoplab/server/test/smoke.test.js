@@ -96,6 +96,69 @@ test('GET /api/orders/1001 returns Alice demo order', async () => {
   assert.ok(res.body.items.length >= 1);
 });
 
+test('Bob can read his order but not Alice order 1001', async () => {
+  const bob = request.agent(app);
+  await bob
+    .post('/api/auth/login')
+    .send({ email: 'bob@shoplab.test', password: 'bob123' })
+    .expect(200);
+
+  const aliceOrder = await bob.get('/api/orders/1001');
+  assert.strictEqual(aliceOrder.status, 404);
+  assert.deepStrictEqual(aliceOrder.body, { error: 'Order not found' });
+
+  const bobOrder = await bob.get('/api/orders/1002');
+  assert.strictEqual(bobOrder.status, 200);
+  assert.strictEqual(bobOrder.body.id, 1002);
+  assert.strictEqual(bobOrder.body.items[0].name, 'USB-C Hub');
+});
+
+test('admin routes deny Bob and allow an admin', async () => {
+  const bob = request.agent(app);
+  await bob
+    .post('/api/auth/login')
+    .send({ email: 'bob@shoplab.test', password: 'bob123' })
+    .expect(200);
+  await bob.get('/api/admin/users').expect(403);
+
+  const admin = request.agent(app);
+  await admin
+    .post('/api/auth/login')
+    .send({ email: 'admin@shoplab.test', password: 'admin123' })
+    .expect(200);
+  const users = await admin.get('/api/admin/users').expect(200);
+  assert.ok(users.body.some((user) => user.email === 'bob@shoplab.test'));
+});
+
+test('profile updates reject attempts to change role or email', async () => {
+  const bob = request.agent(app);
+  await bob
+    .post('/api/auth/login')
+    .send({ email: 'bob@shoplab.test', password: 'bob123' })
+    .expect(200);
+
+  const attack = await bob
+    .patch('/api/auth/me')
+    .send({ name: 'Robert', role: 'admin', email: 'attacker@shoplab.test' })
+    .expect(400);
+  assert.deepStrictEqual(attack.body, { error: 'Invalid profile' });
+
+  const unchangedUser = await bob.get('/api/auth/me').expect(200);
+  assert.strictEqual(unchangedUser.body.name, 'Bob');
+  assert.strictEqual(unchangedUser.body.role, 'customer');
+  assert.strictEqual(unchangedUser.body.email, 'bob@shoplab.test');
+
+  const update = await bob
+    .patch('/api/auth/me')
+    .send({ name: 'Robert' })
+    .expect(200);
+  assert.strictEqual(update.body.name, 'Robert');
+
+  const currentUser = await bob.get('/api/auth/me').expect(200);
+  assert.strictEqual(currentUser.body.role, 'customer');
+  assert.strictEqual(currentUser.body.name, 'Robert');
+});
+
 test('admin can log in', async () => {
   const res = await request(app)
     .post('/api/auth/login')

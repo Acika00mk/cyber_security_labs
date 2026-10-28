@@ -50,6 +50,7 @@ Run `npm test` after your changes. Smoke tests must still pass.
 
 Stretch ideas (optional): [`LAB5-EXTENSIONS.md`](LAB5-EXTENSIONS.md).
 
+
 ---
 
 ## Part A – Authentication is not authorization
