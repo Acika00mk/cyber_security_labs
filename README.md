@@ -13,6 +13,8 @@ Lab material for the web security course. Each lab uses a small application that
 | Week 3 – XSS, CSRF, cookies, CSP | [`shoplab/LAB3.md`](shoplab/LAB3.md) | Stored XSS in reviews, CSRF on reorder, cookie flags, Content Security Policy |
 | Week 4 – Authentication | [`shoplab/LAB4.md`](shoplab/LAB4.md) | Weak password hashes, login enumeration, JWT mistakes, rate limiting; optional extensions |
 | Week 5 – Authorization and access control | [`shoplab/LAB5.md`](shoplab/LAB5.md) | IDOR on orders, missing admin checks, mass assignment; optional extensions |
+| Week 6 – Secrets, dependencies and configuration | [`shoplab/WEEK6-SLIDES.md`](shoplab/WEEK6-SLIDES.md) | Lecture slides: git secrets, `.env`, npm supply chain, headers, SSRF, config mistakes |
+| Week 6 – Configuration hardening | [`shoplab/LAB6.md`](shoplab/LAB6.md) | Verbose errors, SSRF, unsafe uploads, security headers, debug gating, `npm audit` |
 
 ## Quick start (ShopLab)
 

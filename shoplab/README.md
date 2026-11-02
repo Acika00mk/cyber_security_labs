@@ -55,6 +55,9 @@ npm test
 | Week 5 – Authorization (IDOR, roles, mass assignment) | [`LAB5.md`](LAB5.md) |
 | Week 5 – Optional extensions | [`LAB5-EXTENSIONS.md`](LAB5-EXTENSIONS.md) |
 | Week 5 – Lecture slide outline | [`LAB5-SLIDES.md`](LAB5-SLIDES.md) |
+| Week 6 – Secrets, dependencies and configuration (lecture) | [`WEEK6-SLIDES.md`](WEEK6-SLIDES.md) |
+| Week 6 – Configuration, SSRF, uploads, headers | [`LAB6.md`](LAB6.md) |
+| Week 6 – Optional extensions | [`LAB6-EXTENSIONS.md`](LAB6-EXTENSIONS.md) |
 
 ## Lab accounts
 
