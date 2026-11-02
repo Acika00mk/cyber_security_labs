@@ -7,6 +7,7 @@ import Cart from './pages/Cart.jsx';
 import Orders from './pages/Orders.jsx';
 import Admin from './pages/Admin.jsx';
 import Profile from './pages/Profile.jsx';
+import Tools from './pages/Tools.jsx';
 
 function readThemeCookie() {
   const match = document.cookie.match(/(?:^|;\s*)theme=(light|dark)/);
@@ -62,6 +63,8 @@ export default function App() {
     page = user?.role === 'admin' ? <Admin /> : <Login onLogin={onLogin} />;
   } else if (route === '#/profile') {
     page = user ? <Profile user={user} onProfileChange={setUser} /> : <Login onLogin={onLogin} />;
+  } else if (route === '#/tools') {
+    page = user ? <Tools /> : <Login onLogin={onLogin} />;
   } else {
     page = <Products cart={cart} onCartChange={updateCart} user={user} />;
   }
@@ -74,6 +77,7 @@ export default function App() {
           <a href="#/products">Products</a>
           <a href="#/cart">Cart ({cartCount(cart)})</a>
           <a href="#/orders">My orders</a>
+          {user && <a href="#/tools">Tools</a>}
           {user?.role === 'admin' && <a href="#/admin">Admin</a>}
         </nav>
         <div className="user">
