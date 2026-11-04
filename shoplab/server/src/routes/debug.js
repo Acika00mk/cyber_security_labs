@@ -2,7 +2,13 @@ const express = require('express');
 
 const router = express.Router();
 
-// Teaching endpoint: shows what the browser sends. Cookie values are never returned.
+router.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+});
+
 router.get('/echo', (req, res) => {
   const cookies = (req.headers.cookie || '')
     .split(';')
@@ -15,7 +21,6 @@ router.get('/echo', (req, res) => {
   res.json({ method: req.method, url: req.originalUrl, headers, cookies });
 });
 
-// Lab 6 teaching build: configuration hints without printing secret values.
 router.get('/config', (req, res) => {
   res.json({
     nodeEnv: process.env.NODE_ENV || '(not set)',

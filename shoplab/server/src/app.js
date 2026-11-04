@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
@@ -20,6 +21,21 @@ const requireRole = require('./middleware/requireRole');
 
 function createApp() {
   const app = express();
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction && !process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET is required in production');
+  }
+
+  if (isProduction && !process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is required in production');
+  }
+
+  app.use((req, res, next) => {
+    req.id = req.get('X-Request-Id') || crypto.randomUUID();
+    res.setHeader('X-Request-Id', req.id);
+    next();
+  });
 
   if (process.env.CORS_MODE === 'reflect') {
     console.warn('WARNING: CORS_MODE=reflect – any website can read API responses. Use only for the lecture demo.');
@@ -31,7 +47,7 @@ function createApp() {
   app.use(
     session({
       name: 'shoplab.sid',
-      secret: process.env.SESSION_SECRET || 'change-me-in-lab',
+      secret: process.env.SESSION_SECRET || 'dev-session-secret',
       resave: false,
       saveUninitialized: false,
       cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
@@ -40,10 +56,8 @@ function createApp() {
 
   app.use(securityHeaders);
 
-  // Lab 6 teaching build: user uploads are served as static files (path traversal risk).
   const uploadDir = path.join(__dirname, '..', 'uploads');
   fs.mkdirSync(uploadDir, { recursive: true });
-  app.use('/uploads', express.static(uploadDir));
 
   app.use('/api', requestLog);
   app.use('/api/auth', authRoutes);
@@ -53,8 +67,11 @@ function createApp() {
   app.use('/api/admin', requireLogin, requireRole('admin'), adminRoutes);
   app.use('/api/tools', toolsRoutes);
   app.use('/api/uploads', uploadRoutes);
-  // Lab 6 teaching build: debug routes stay enabled (disable in production in the lab).
-  app.use('/api/debug', debugRoutes);
+  if (isProduction) {
+    app.use('/api/debug', (req, res) => res.status(404).json({ error: 'Not found' }));
+  } else {
+    app.use('/api/debug', debugRoutes);
+  }
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
@@ -63,7 +80,6 @@ function createApp() {
     app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
   }
 
-  // Lab 6 teaching build: verbose JSON errors (stack traces) — replace in the lab.
   app.use(errorHandler);
 
   return app;

