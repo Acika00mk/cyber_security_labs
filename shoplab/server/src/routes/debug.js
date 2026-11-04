@@ -19,9 +19,7 @@ router.get('/echo', (req, res) => {
 router.get('/config', (req, res) => {
   res.json({
     nodeEnv: process.env.NODE_ENV || '(not set)',
-    verboseErrors: process.env.VERBOSE_ERRORS || '(not set)',
-    sessionSecretFromEnv: Boolean(process.env.SESSION_SECRET),
-    usingDefaultSessionSecret: !process.env.SESSION_SECRET,
+    verboseErrors: process.env.VERBOSE_ERRORS || '(not set)'
   });
 });
 
