@@ -6,15 +6,15 @@ Lab material for the web security course. Each lab uses a small application that
 
 ## Labs
 
-| Lab | Folder | Description |
-|---|---|---|
-| Week 1 – How the web works and how it breaks | [`shoplab/`](shoplab/) | ShopLab, a small online shop (Express + React + SQLite) |
-| Week 2 – Injection (SQL) | [`shoplab/LAB2.md`](shoplab/LAB2.md) | String-built SQL in catalog, login, and order filter; fix with parameters and schema validation |
-| Week 3 – XSS, CSRF, cookies, CSP | [`shoplab/LAB3.md`](shoplab/LAB3.md) | Stored XSS in reviews, CSRF on reorder, cookie flags, Content Security Policy |
-| Week 4 – Authentication | [`shoplab/LAB4.md`](shoplab/LAB4.md) | Weak password hashes, login enumeration, JWT mistakes, rate limiting; optional extensions |
-| Week 5 – Authorization and access control | [`shoplab/LAB5.md`](shoplab/LAB5.md) | IDOR on orders, missing admin checks, mass assignment; optional extensions |
-| Week 6 – Secrets, dependencies and configuration | [`shoplab/WEEK6-SLIDES.md`](shoplab/WEEK6-SLIDES.md) | Lecture slides: git secrets, `.env`, npm supply chain, headers, SSRF, config mistakes |
-| Week 6 – Configuration hardening | [`shoplab/LAB6.md`](shoplab/LAB6.md) | Verbose errors, SSRF, unsafe uploads, security headers, debug gating, `npm audit` |
+| Lab                                              | Folder                                               | Description                                                                                     |
+| ------------------------------------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Week 1 – How the web works and how it breaks     | [`shoplab/`](shoplab/)                               | ShopLab, a small online shop (Express + React + SQLite)                                         |
+| Week 2 – Injection (SQL)                         | [`shoplab/LAB2.md`](shoplab/LAB2.md)                 | String-built SQL in catalog, login, and order filter; fix with parameters and schema validation |
+| Week 3 – XSS, CSRF, cookies, CSP                 | [`shoplab/LAB3.md`](shoplab/LAB3.md)                 | Stored XSS in reviews, CSRF on reorder, cookie flags, Content Security Policy                   |
+| Week 4 – Authentication                          | [`shoplab/LAB4.md`](shoplab/LAB4.md)                 | Weak password hashes, login enumeration, JWT mistakes, rate limiting; optional extensions       |
+| Week 5 – Authorization and access control        | [`shoplab/LAB5.md`](shoplab/LAB5.md)                 | IDOR on orders, missing admin checks, mass assignment; optional extensions                      |
+| Week 6 – Secrets, dependencies and configuration | [`shoplab/WEEK6-SLIDES.md`](shoplab/WEEK6-SLIDES.md) | Lecture slides: git secrets, `.env`, npm supply chain, headers, SSRF, config mistakes           |
+| Week 6 – Configuration hardening                 | [`shoplab/LAB6.md`](shoplab/LAB6.md)                 | Verbose errors, SSRF, unsafe uploads, security headers, debug gating, `npm audit`               |
 
 ## Quick start (ShopLab)
 
@@ -28,10 +28,10 @@ npm start         # builds and starts the shop
 
 Open **http://localhost:3000** and log in with one of the lab accounts:
 
-| Email | Password |
-|---|---|
-| alice@shoplab.test | alice123 |
-| bob@shoplab.test | bob123 |
+| Email              | Password                       |
+| ------------------ | ------------------------------ |
+| alice@shoplab.test | alice123                       |
+| bob@shoplab.test   | bob123                         |
 | admin@shoplab.test | admin123 (Lab 5 staff account) |
 
 Lab coupons for the Cart page: `WELCOME10` (€10.00 off) and `SPRING50` (€50.00 off).

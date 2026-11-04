@@ -13,23 +13,23 @@ This lab uses **ShopLab** after the Week 5 authorization fixes. The app still ru
 
 Lab accounts (same as earlier labs):
 
-| Email | Password | Role |
-|---|---|---|
+| Email              | Password | Role     |
+| ------------------ | -------- | -------- |
 | alice@shoplab.test | alice123 | customer |
-| bob@shoplab.test | bob123 | customer |
-| admin@shoplab.test | admin123 | admin |
+| bob@shoplab.test   | bob123   | customer |
+| admin@shoplab.test | admin123 | admin    |
 
 ## Suggested schedule (~3 hours)
 
-| Time | Part | What you do |
-|---|---|---|
-| 0:00–0:25 | A | Verbose errors and `/api/debug/config` |
-| 0:25–0:55 | B | SSRF with `/api/tools/fetch` |
-| 0:55–1:25 | C | Unsafe upload and path traversal |
-| 1:25–1:50 | D | Security headers and debug gating |
-| 1:50–2:20 | E | Implement fixes |
-| 2:20–2:45 | F | `.env` hygiene and dependency audit |
-| 2:45–3:00 | G | Proof table and write-up |
+| Time      | Part | What you do                            |
+| --------- | ---- | -------------------------------------- |
+| 0:00–0:25 | A    | Verbose errors and `/api/debug/config` |
+| 0:25–0:55 | B    | SSRF with `/api/tools/fetch`           |
+| 0:55–1:25 | C    | Unsafe upload and path traversal       |
+| 1:25–1:50 | D    | Security headers and debug gating      |
+| 1:50–2:20 | E    | Implement fixes                        |
+| 2:20–2:45 | F    | `.env` hygiene and dependency audit    |
+| 2:45–3:00 | G    | Proof table and write-up               |
 
 ## What you must do
 
@@ -204,15 +204,15 @@ Do not run `npm audit fix --force` without testing — it may bump major version
 
 After **all** fixes:
 
-| Check | Expected |
-|---|---|
-| `GET /api/debug/crash` | Generic error JSON **without** stack (or debug disabled in prod mode) |
-| `GET /api/debug/config` as anonymous | **404** in prod mode, or still blocked by your policy |
-| `GET /api/tools/fetch?url=http://127.0.0.1:...` | **400** blocked |
-| `POST /api/uploads?name=../../../tmp/evil.txt` | **400** or safe path under uploads only |
-| Response headers | `X-Content-Type-Options`, `Referrer-Policy` present |
-| `npm test` | Passes |
-| `.env` | Not tracked by git |
+| Check                                           | Expected                                                              |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| `GET /api/debug/crash`                          | Generic error JSON **without** stack (or debug disabled in prod mode) |
+| `GET /api/debug/config` as anonymous            | **404** in prod mode, or still blocked by your policy                 |
+| `GET /api/tools/fetch?url=http://127.0.0.1:...` | **400** blocked                                                       |
+| `POST /api/uploads?name=../../../tmp/evil.txt`  | **400** or safe path under uploads only                               |
+| Response headers                                | `X-Content-Type-Options`, `Referrer-Policy` present                   |
+| `npm test`                                      | Passes                                                                |
+| `.env`                                          | Not tracked by git                                                    |
 
 ### Short write-up (required)
 
