@@ -5,17 +5,13 @@ const { db, verifyPassword } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema } = require('../validation/catalog');
-const rateLimit = require('express-rate-limit');  
+
 
 
 const router = express.Router();
 
 // Lab 4 teaching build: secret lives in source (students move this to env).
-const JWT_SECRET = 'shoplab-jwt-secret';
-
-function sha256Hex(password) {
-  return crypto.createHash('sha256').update(String(password), 'utf8').digest('hex');
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'shoplab-jwt-secret';
 
 router.post('/login', (req, res, next) => {
   const parsed = loginBodySchema.safeParse(req.body || {});
@@ -30,7 +26,7 @@ router.post('/login', (req, res, next) => {
   if (!user) {
     return res.status(401).json({ error: 'No account with that email' });
   }
-  if (sha256Hex(password) !== user.password_hash) {
+  if (!verifyPassword(password, user.password_hash)) {
     return res.status(401).json({ error: 'Incorrect password' });
   }
 
@@ -77,3 +73,17 @@ router.get('/me', requireLogin, (req, res) => {
 });
 
 module.exports = router;
+
+router.patch('/me', requireLogin, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  if (!user) return res.status(401).json({ error: 'Please log in' });
+  const body = req.body && typeof req.body === 'object' ? req.body : {};
+  const name = typeof body.name === 'string' ? body.name.trim() : user.name;
+  const email = typeof body.email === 'string' ? body.email.trim() : user.email;
+  const role = typeof body.role === 'string' ? body.role.trim() : user.role;
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Invalid profile' });
+  }
+  db.prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?').run(name, email, role, user.id);
+  res.json({ id: user.id, name, email, role });
+});

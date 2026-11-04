@@ -107,6 +107,7 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 // Lab 5 teaching build: loads by order id only — no owner filter (IDOR).
+
 router.get('/:id', requireLogin, (req, res) => {
   const parsed = orderIdParamSchema.safeParse(req.params.id);
   if (!parsed.success) {
@@ -114,11 +115,12 @@ router.get('/:id', requireLogin, (req, res) => {
   }
 
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(parsed.data);
-  if (!order) {
+  const user = db.prepare('SELECT role FROM users WHERE id = ?').get(req.session.userId);
+  if (!order || !user || (user.role !== 'admin' && order.user_id !== req.session.userId)) {
     return res.status(404).json({ error: 'Order not found' });
   }
 
-  res.json(orderToJson(order));
+  return res.json(orderToJson(order));
 });
 
 // Quick reorder from order history (form-friendly for the lecture demo).
