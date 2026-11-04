@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { db, verifyPassword } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
-const { loginBodySchema } = require('../validation/catalog');
+const { loginBodySchema, profilePatchSchema } = require('../validation/catalog');
 
 
 
@@ -72,6 +72,7 @@ router.get('/me', requireLogin, (req, res) => {
   res.json({ id: user.id, name: user.name, email: user.email });
 });
 
+<<<<<<< HEAD
 module.exports = router;
 
 router.patch('/me', requireLogin, (req, res) => {
@@ -87,3 +88,24 @@ router.patch('/me', requireLogin, (req, res) => {
   db.prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?').run(name, email, role, user.id);
   res.json({ id: user.id, name, email, role });
 });
+=======
+router.patch('/me', requireLogin, (req, res) => {
+  const parsed = profilePatchSchema.safeParse(req.body || {});
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid profile' });
+  }
+
+  const user = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(req.session.userId);
+  if (!user) return res.status(401).json({ error: 'Please log in' });
+
+  db.prepare('UPDATE users SET name = ? WHERE id = ?').run(parsed.data.name, user.id);
+  res.json({
+    id: user.id,
+    name: parsed.data.name,
+    email: user.email,
+    role: user.role || 'customer',
+  });
+});
+
+module.exports = router;
+>>>>>>> c73c5f3d7c3d68935fd1f54194209bdb061a6508

@@ -108,6 +108,36 @@ export const api = {
   adminUsers: () => request('/admin/users'),
   updateProfile: (profile) =>
     request('/auth/me', { method: 'PATCH', body: JSON.stringify(profile) }),
+  fetchUrl: (url) => request(`/tools/fetch?${new URLSearchParams({ url })}`),
+  uploadFile: async (name, blob) => {
+    if (!csrfToken) {
+      await refreshCsrf();
+    }
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/octet-stream',
+    };
+    const token = getToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+    const res = await fetch(`/api/uploads?name=${encodeURIComponent(name)}`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers,
+      body: blob,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.error || `Request failed (${res.status})`);
+      error.status = res.status;
+      throw error;
+    }
+    return data;
+  },
   placeOrder: (order) => request('/orders', { method: 'POST', body: JSON.stringify(order) }),
   reorder: (productId, quantity) =>
     request('/orders/reorder', { method: 'POST', body: JSON.stringify({ productId, quantity }) }),

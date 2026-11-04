@@ -96,6 +96,53 @@ test('GET /api/orders/1001 returns Alice demo order', async () => {
   assert.ok(res.body.items.length >= 1);
 });
 
+test('Bob cannot read Alice order 1001 (IDOR fix)', async () => {
+  const bob = request.agent(app);
+  await bob
+    .post('/api/auth/login')
+    .send({ email: 'bob@shoplab.test', password: 'bob123' })
+    .expect(200);
+  const res = await bob.get('/api/orders/1001');
+  assert.strictEqual(res.status, 404);
+});
+
+test('Bob cannot list admin users', async () => {
+  const bob = request.agent(app);
+  await bob
+    .post('/api/auth/login')
+    .send({ email: 'bob@shoplab.test', password: 'bob123' })
+    .expect(200);
+  const res = await bob.get('/api/admin/users');
+  assert.strictEqual(res.status, 403);
+});
+
+test('profile PATCH rejects role mass assignment', async () => {
+  const res = await agent
+    .patch('/api/auth/me')
+    .send({ name: 'Alice', role: 'admin' });
+  assert.strictEqual(res.status, 400);
+  const me = await agent.get('/api/auth/me');
+  assert.strictEqual(me.body.role, 'customer');
+});
+
+test('debug config endpoint is reachable in teaching build', async () => {
+  const res = await request(app).get('/api/debug/config');
+  assert.strictEqual(res.status, 200);
+  assert.ok('nodeEnv' in res.body);
+});
+
+test('tools fetch performs server-side HTTP (SSRF teaching surface)', async () => {
+  const res = await agent.get('/api/tools/fetch').query({ url: 'http://127.0.0.1:1' });
+  assert.strictEqual(res.status, 500);
+  assert.ok(typeof res.body.stack === 'string');
+});
+
+test('verbose error handler returns stack on debug crash', async () => {
+  const res = await request(app).get('/api/debug/crash');
+  assert.strictEqual(res.status, 500);
+  assert.ok(typeof res.body.stack === 'string' && res.body.stack.includes('Lab 6'));
+});
+
 test('admin can log in', async () => {
   const res = await request(app)
     .post('/api/auth/login')
