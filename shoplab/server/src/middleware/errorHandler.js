@@ -7,7 +7,7 @@ function errorHandler(err, req, res, next) {
   const status = err.status || err.statusCode || 500;
   const payload = {
     error: err.message || 'Error',
-    stack: err.stack,
+    // stack: err.stack,
   };
 
   if (err.code === 'SQLITE_ERROR') {
