@@ -2,6 +2,13 @@ const express = require('express');
 
 const router = express.Router();
 
+router.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+});
+
 // Teaching endpoint: shows what the browser sends. Cookie values are never returned.
 router.get('/echo', (req, res) => {
   const cookies = (req.headers.cookie || '')

@@ -131,16 +131,34 @@ test('debug config endpoint is reachable in teaching build', async () => {
   assert.ok('nodeEnv' in res.body);
 });
 
-test('tools fetch performs server-side HTTP (SSRF teaching surface)', async () => {
-  const res = await agent.get('/api/tools/fetch').query({ url: 'http://127.0.0.1:1' });
-  assert.strictEqual(res.status, 500);
-  assert.ok(typeof res.body.stack === 'string');
+test('security headers are present on responses', async () => {
+  const res = await request(app).get('/api/products');
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.headers['x-content-type-options'], 'nosniff');
+  assert.strictEqual(res.headers['referrer-policy'], 'no-referrer');
 });
 
-test('verbose error handler returns stack on debug crash', async () => {
+test('tools fetch blocks private loopback SSRF targets', async () => {
+  const res = await agent.get('/api/tools/fetch').query({ url: 'http://127.0.0.1:1' });
+  assert.strictEqual(res.status, 400);
+  assert.strictEqual(res.body.error, 'Only public HTTPS URLs are allowed.');
+});
+
+test('uploads reject traversal attempts and keep files inside the upload root', async () => {
+  const res = await agent
+    .post('/api/uploads')
+    .query({ name: '../../../tmp/evil.txt' })
+    .set('Content-Type', 'text/plain')
+    .send('payload');
+  assert.strictEqual(res.status, 400);
+  assert.strictEqual(res.body.error, 'Invalid file name.');
+});
+
+test('verbose error handler hides stack traces', async () => {
   const res = await request(app).get('/api/debug/crash');
   assert.strictEqual(res.status, 500);
-  assert.ok(typeof res.body.stack === 'string' && res.body.stack.includes('Lab 6'));
+  assert.strictEqual(res.body.error, 'Something went wrong');
+  assert.ok(!('stack' in res.body));
 });
 
 test('admin can log in', async () => {

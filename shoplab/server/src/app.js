@@ -40,10 +40,8 @@ function createApp() {
 
   app.use(securityHeaders);
 
-  // Lab 6 teaching build: user uploads are served as static files (path traversal risk).
   const uploadDir = path.join(__dirname, '..', 'uploads');
   fs.mkdirSync(uploadDir, { recursive: true });
-  app.use('/uploads', express.static(uploadDir));
 
   app.use('/api', requestLog);
   app.use('/api/auth', authRoutes);
@@ -53,8 +51,11 @@ function createApp() {
   app.use('/api/admin', requireLogin, requireRole('admin'), adminRoutes);
   app.use('/api/tools', toolsRoutes);
   app.use('/api/uploads', uploadRoutes);
-  // Lab 6 teaching build: debug routes stay enabled (disable in production in the lab).
-  app.use('/api/debug', debugRoutes);
+  if (process.env.NODE_ENV === 'production') {
+    app.use('/api/debug', (req, res) => res.status(404).json({ error: 'Not found' }));
+  } else {
+    app.use('/api/debug', debugRoutes);
+  }
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
