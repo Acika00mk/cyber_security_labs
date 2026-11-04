@@ -22,54 +22,71 @@ function createApp() {
   const app = express();
 
   if (process.env.CORS_MODE === 'reflect') {
-    console.warn('WARNING: CORS_MODE=reflect – any website can read API responses. Use only for the lecture demo.');
+    console.warn(
+      'WARNING: CORS_MODE=reflect – any website can read API responses. Use only for the lecture demo.'
+    );
     app.use(cors({ origin: true, credentials: true }));
   }
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
+
   app.use(
     session({
       name: 'shoplab.sid',
       secret: process.env.SESSION_SECRET || 'change-me-in-lab',
       resave: false,
       saveUninitialized: false,
-      cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
+      cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        maxAge: 60 * 60 * 1000,
+      },
     })
   );
 
   app.use(securityHeaders);
 
-  // Lab 6 teaching build: user uploads are served as static files (path traversal risk).
-  const uploadDir = path.join(__dirname, '..', 'uploads');
-  fs.mkdirSync(uploadDir, { recursive: true });
-  app.use('/uploads', express.static(uploadDir));
-
+  // Uploads are handled by authenticated routes, not public static hosting.
   app.use('/api', requestLog);
   app.use('/api/auth', authRoutes);
   app.use('/api/products/:productId/reviews', reviewRoutes);
   app.use('/api/products', productRoutes);
   app.use('/api/orders', orderRoutes);
-<<<<<<< HEAD
-  // Lab 5 teaching build: login required but no admin role check on this router.
-  // app.use('/api/admin', requireLogin, requireRole, adminRoutes);
-  app.use('/api/admin', requireLogin, requireRole, adminRoutes);
-=======
   app.use('/api/admin', requireLogin, requireRole('admin'), adminRoutes);
   app.use('/api/tools', toolsRoutes);
   app.use('/api/uploads', uploadRoutes);
-  // Lab 6 teaching build: debug routes stay enabled (disable in production in the lab).
->>>>>>> c73c5f3d7c3d68935fd1f54194209bdb061a6508
-  app.use('/api/debug', debugRoutes);
-  app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
-  const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
-  if (fs.existsSync(clientDist)) {
-    app.use(express.static(clientDist));
-    app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  // Debug routes are unavailable in production.
+  if (process.env.NODE_ENV !== 'production') {
+    app.use('/api/debug', debugRoutes);
   }
 
-  // Lab 6 teaching build: verbose JSON errors (stack traces) — replace in the lab.
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+
+  // Explicitly block the former public upload URLs.
+  app.use('/uploads', (req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+
+  const clientDist = path.join(
+    __dirname,
+    '..',
+    '..',
+    'client',
+    'dist'
+  );
+
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientDist, 'index.html'));
+    });
+  }
+
   app.use(errorHandler);
 
   return app;
