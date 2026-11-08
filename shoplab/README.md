@@ -57,6 +57,7 @@ npm test
 | Week 5 – Lecture slide outline | [`LAB5-SLIDES.md`](LAB5-SLIDES.md) |
 | Week 6 – Secrets, dependencies and configuration (lecture) | [`WEEK6-SLIDES.md`](WEEK6-SLIDES.md) |
 | Week 6 – Configuration, SSRF, uploads, headers | [`LAB6.md`](LAB6.md) |
+| Week 6 – Lab slide outline | [`LAB6-SLIDES.md`](LAB6-SLIDES.md) |
 | Week 6 – Optional extensions | [`LAB6-EXTENSIONS.md`](LAB6-EXTENSIONS.md) |
 
 ## Lab accounts
