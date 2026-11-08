@@ -59,6 +59,7 @@ npm test
 | Week 6 – Configuration, SSRF, uploads, headers | [`LAB6.md`](LAB6.md) |
 | Week 6 – Lab slide outline | [`LAB6-SLIDES.md`](LAB6-SLIDES.md) |
 | Week 6 – Optional extensions | [`LAB6-EXTENSIONS.md`](LAB6-EXTENSIONS.md) |
+| Week 7 – Logging, safe failure and releasing (lecture) | [`WEEK7-SLIDES.md`](WEEK7-SLIDES.md) |
 
 ## Lab accounts
 
