@@ -40,7 +40,7 @@ Lab accounts (same as earlier labs):
 5. **Gate** debug routes: return **404** when `NODE_ENV=production`, or require admin + document choice.
 6. Run **`npm audit`** in `server/` and note one finding (or confirm clean); ensure `.env` is gitignored and secrets only in `.env.example` as placeholders.
 
-Run `npm test` after your changes. Update tests only if your fixes change intentional teaching behaviour (ask your instructor).
+Run `npm test` after your changes. The last two Lab 6 smoke tests expect the **teaching** build; after your fixes they should fail until you update those tests (or your instructor provides patched smoke tests).
 
 Stretch ideas: [`LAB6-EXTENSIONS.md`](LAB6-EXTENSIONS.md).
 

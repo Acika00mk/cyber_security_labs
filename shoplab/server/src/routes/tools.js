@@ -1,5 +1,6 @@
 const express = require('express');
 const requireLogin = require('../middleware/requireLogin');
+const { assertSafeFetchUrl } = require('../lib/safeFetchUrl');
 
 const router = express.Router();
 
@@ -58,6 +59,9 @@ router.get('/fetch', requireLogin, async (req, res, next) => {
       body: body.slice(0, 8000),
     });
   } catch (err) {
+    if (err.status === 400) {
+      return res.status(400).json({ error: err.message });
+    }
     next(err);
   }
 });

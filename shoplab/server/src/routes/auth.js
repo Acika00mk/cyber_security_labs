@@ -20,6 +20,8 @@ router.post('/login', (req, res, next) => {
   }
 
   const { email, password } = parsed.data;
+  // Lab 7 teaching build: never log passwords, tokens, or Authorization headers.
+  console.log('[auth] login attempt', { email, password, authorization: req.get('Authorization') });
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
   // Lab 4 teaching build: different messages reveal whether the account exists.

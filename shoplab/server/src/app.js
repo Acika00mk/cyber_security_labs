@@ -18,6 +18,13 @@ const uploadRoutes = require('./routes/uploads');
 const requireLogin = require('./middleware/requireLogin');
 const requireRole = require('./middleware/requireRole');
 
+function sessionSecret() {
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET is required when NODE_ENV=production');
+  }
+  return process.env.SESSION_SECRET || 'change-me-in-lab';
+}
+
 function createApp() {
   const app = express();
 
@@ -34,7 +41,7 @@ function createApp() {
   app.use(
     session({
       name: 'shoplab.sid',
-      secret: process.env.SESSION_SECRET || 'change-me-in-lab',
+      secret: sessionSecret(),
       resave: false,
       saveUninitialized: false,
       cookie: {

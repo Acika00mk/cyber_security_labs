@@ -125,22 +125,47 @@ test('profile PATCH rejects role mass assignment', async () => {
   assert.strictEqual(me.body.role, 'customer');
 });
 
-test('debug config endpoint is reachable in teaching build', async () => {
-  const res = await request(app).get('/api/debug/config');
-  assert.strictEqual(res.status, 200);
-  assert.ok('nodeEnv' in res.body);
-});
-
-test('tools fetch performs server-side HTTP (SSRF teaching surface)', async () => {
-  const res = await agent.get('/api/tools/fetch').query({ url: 'http://127.0.0.1:1' });
-  assert.strictEqual(res.status, 500);
-  assert.ok(typeof res.body.stack === 'string');
-});
-
-test('verbose error handler returns stack on debug crash', async () => {
+test('debug crash does not return stack traces (Lab 6 fix)', async () => {
   const res = await request(app).get('/api/debug/crash');
   assert.strictEqual(res.status, 500);
-  assert.ok(typeof res.body.stack === 'string' && res.body.stack.includes('Lab 6'));
+  assert.strictEqual(res.body.stack, undefined);
+  assert.ok(res.body.requestId);
+});
+
+test('tools fetch blocks loopback SSRF (Lab 6 fix)', async () => {
+  const res = await agent.get('/api/tools/fetch').query({ url: 'http://127.0.0.1:1' });
+  assert.strictEqual(res.status, 400);
+});
+
+test('login teaching build logs the password (Lab 7 — remove this)', async () => {
+  const chunks = [];
+  const original = console.log;
+  console.log = (...args) => {
+    chunks.push(args);
+    original.apply(console, args);
+  };
+  try {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'alice@shoplab.test', password: 'alice123' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(JSON.stringify(chunks).includes('alice123'));
+  } finally {
+    console.log = original;
+  }
+});
+
+test('role check fails open when AUTHZ_UNAVAILABLE=1 (Lab 7 — fail closed)', async () => {
+  process.env.AUTHZ_UNAVAILABLE = '1';
+  try {
+    const bob = request.agent(app);
+    await bob.post('/api/auth/login').send({ email: 'bob@shoplab.test', password: 'bob123' }).expect(200);
+    const res = await bob.get('/api/admin/users');
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+  } finally {
+    delete process.env.AUTHZ_UNAVAILABLE;
+  }
 });
 
 test('admin can log in', async () => {
