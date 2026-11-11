@@ -17,6 +17,7 @@ const toolsRoutes = require('./routes/tools');
 const uploadRoutes = require('./routes/uploads');
 const requireLogin = require('./middleware/requireLogin');
 const requireRole = require('./middleware/requireRole');
+const securityLog = require('./lib/securityLog');
 
 function sessionSecret() {
   if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
