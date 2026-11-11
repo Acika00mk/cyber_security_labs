@@ -32,7 +32,13 @@ router.post('/login', loginLimiter, (req, res, next) => {
 
   const { email, password } = parsed.data;
   // Lab 7 teaching build: never log passwords, tokens, or Authorization headers.
-  console.log('[auth] login attempt', { email, password, authorization: req.get('Authorization') });
+  console.log({ email, password, authorization: req.get('Authorization') });
+  securityLog({
+    event:'auth_login_attempt',
+    email,
+    role:user?.role || 'unknown',
+    id:user?.id || 'unknown',
+  })
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
   if (!user || !verifyPassword(password, user.password_hash)) {

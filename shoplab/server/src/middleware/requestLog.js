@@ -3,7 +3,10 @@ function requestLog(req, res, next) {
     const time = new Date().toTimeString().slice(0, 8);
     const origin = req.headers.origin || '-';
     const hasSession = /(^|;\s*)shoplab\.sid=/.test(req.headers.cookie || '') ? 'yes' : 'no';
-    console.log(`${time} ${req.method} ${req.originalUrl.split('?')[0]} ${res.statusCode} origin:${origin} sid:${hasSession}`);
+    if (res.statusCode === 401){
+      console.log(`Status: ${res.statusMessage}${time} ${req.method} ${req.originalUrl.split('?')[0]} ${res.statusCode} origin:${origin} sid:${hasSession} - Unauthorized access attempt`);
+    }
+    console.log(`Status: ${res.statusMessage}${time} ${req.method} ${req.originalUrl.split('?')[0]} ${res.statusCode} origin:${origin} sid:${hasSession}`);
   });
   next();
 }
