@@ -1,20 +1,17 @@
-// Lab 6 teaching build: returns stack traces (and SQLite hints) to API clients.
+const crypto = require('node:crypto');
+
 function errorHandler(err, req, res, next) {
   if (res.headersSent) {
     return next(err);
   }
 
   const status = err.status || err.statusCode || 500;
-  const payload = {
-    error: err.message || 'Error',
-    stack: err.stack,
-  };
+  const requestId = crypto.randomBytes(8).toString('hex');
+  console.error(`[${requestId}]`, err.stack || err);
 
-  if (err.code === 'SQLITE_ERROR') {
-    payload.sql = err.message;
-  }
+  const message = status >= 500 ? 'Something went wrong' : err.message || 'Error';
 
-  res.status(status).json(payload);
+  res.status(status).json({ error: message, requestId });
 }
 
 module.exports = errorHandler;

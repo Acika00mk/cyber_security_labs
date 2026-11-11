@@ -60,6 +60,9 @@ npm test
 | Week 6 – Lab slide outline | [`LAB6-SLIDES.md`](LAB6-SLIDES.md) |
 | Week 6 – Optional extensions | [`LAB6-EXTENSIONS.md`](LAB6-EXTENSIONS.md) |
 | Week 7 – Logging, safe failure and releasing (lecture) | [`WEEK7-SLIDES.md`](WEEK7-SLIDES.md) |
+| Week 7 – Logging, fail closed, semester findings | [`LAB7.md`](LAB7.md) |
+| Week 7 – Lab slide outline | [`LAB7-SLIDES.md`](LAB7-SLIDES.md) |
+| Week 7 – Optional extensions | [`LAB7-EXTENSIONS.md`](LAB7-EXTENSIONS.md) |
 
 ## Lab accounts
 

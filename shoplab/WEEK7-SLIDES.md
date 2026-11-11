@@ -76,7 +76,7 @@ By the end of this session you can:
 
 ## Lab preview (this week’s practical)
 
-When you reach the lab (after this lecture):
+When you reach the lab (after this lecture), follow [`LAB7.md`](LAB7.md):
 
 1. Add **security logging** for login and access-control events
 2. **Remove** one unsafe log entry (secret in the log)

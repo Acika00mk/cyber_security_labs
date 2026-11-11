@@ -18,6 +18,13 @@ const uploadRoutes = require('./routes/uploads');
 const requireLogin = require('./middleware/requireLogin');
 const requireRole = require('./middleware/requireRole');
 
+function sessionSecret() {
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET is required when NODE_ENV=production');
+  }
+  return process.env.SESSION_SECRET || 'change-me-in-lab';
+}
+
 function createApp() {
   const app = express();
 
@@ -31,19 +38,22 @@ function createApp() {
   app.use(
     session({
       name: 'shoplab.sid',
-      secret: process.env.SESSION_SECRET || 'change-me-in-lab',
+      secret: sessionSecret(),
       resave: false,
       saveUninitialized: false,
-      cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 60 * 60 * 1000 },
+      cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 1000,
+      },
     })
   );
 
   app.use(securityHeaders);
 
-  // Lab 6 teaching build: user uploads are served as static files (path traversal risk).
   const uploadDir = path.join(__dirname, '..', 'uploads');
   fs.mkdirSync(uploadDir, { recursive: true });
-  app.use('/uploads', express.static(uploadDir));
 
   app.use('/api', requestLog);
   app.use('/api/auth', authRoutes);
@@ -53,8 +63,13 @@ function createApp() {
   app.use('/api/admin', requireLogin, requireRole('admin'), adminRoutes);
   app.use('/api/tools', toolsRoutes);
   app.use('/api/uploads', uploadRoutes);
-  // Lab 6 teaching build: debug routes stay enabled (disable in production in the lab).
-  app.use('/api/debug', debugRoutes);
+
+  if (process.env.NODE_ENV === 'production') {
+    app.use('/api/debug', (req, res) => res.status(404).json({ error: 'Not found' }));
+  } else {
+    app.use('/api/debug', debugRoutes);
+  }
+
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
@@ -63,7 +78,6 @@ function createApp() {
     app.get('*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
   }
 
-  // Lab 6 teaching build: verbose JSON errors (stack traces) — replace in the lab.
   app.use(errorHandler);
 
   return app;
