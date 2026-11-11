@@ -5,6 +5,7 @@ const { db, verifyPassword } = require('../db');
 const requireLogin = require('../middleware/requireLogin');
 const { issueCsrfToken } = require('../middleware/csrf');
 const { loginBodySchema, profilePatchSchema } = require('../validation/catalog');
+const securityLog = require('./../lib/securityLog');
 
 const router = express.Router();
 
@@ -32,10 +33,14 @@ router.post('/login', loginLimiter, (req, res, next) => {
 
   const { email, password } = parsed.data;
   // Lab 7 teaching build: never log passwords, tokens, or Authorization headers.
-  console.log('[auth] login attempt', { email, password, authorization: req.get('Authorization') });
+  // console.log('[auth] login attempt', { email, password, authorization: req.get('Authorization') });
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
   if (!user || !verifyPassword(password, user.password_hash)) {
+    securityLog({
+      event: 'auth_login_failed',
+      message: "Invalid email or passwprd",
+    });
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
@@ -45,6 +50,10 @@ router.post('/login', loginLimiter, (req, res, next) => {
     if (err) return next(err);
     req.session.userId = user.id;
     issueCsrfToken(req);
+    securityLog({
+      event: 'auth_login_success',
+      message: "Successfull login",
+    })
     res.json({
       id: user.id,
       name: user.name,

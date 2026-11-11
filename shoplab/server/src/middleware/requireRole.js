@@ -1,7 +1,9 @@
 const { db } = require('../db');
+const securityLog = require('../lib/securityLog');
 
 function loadRole(userId) {
   // Lab 7 teaching: simulated permission-service outage (set AUTHZ_UNAVAILABLE=1).
+  console.llg("Process", process.env.AUTHZ_UNAVAILABLE)
   if (process.env.AUTHZ_UNAVAILABLE === '1') {
     throw new Error('permission service unavailable');
   }
@@ -20,6 +22,10 @@ function requireRole(...allowedRoles) {
       next();
     } catch (err) {
       // Lab 7 teaching build: fail open when the role check throws.
+      securityLog({
+        event: 'authorization.denied',
+        message: `role check failed, allowing request ${err.message}`,
+      })
       console.warn('role check failed, allowing request', err.message);
       next();
     }

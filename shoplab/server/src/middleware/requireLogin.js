@@ -19,6 +19,7 @@ function requireLogin(req, res, next) {
         return next();
       }
     } catch {
+      
       return res.status(401).json({ error: 'Please log in' });
     }
     return res.status(401).json({ error: 'Please log in' });
